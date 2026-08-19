@@ -1,13 +1,17 @@
 {
   "name": "EZEE VISION CHAMPUA — Student Result Manager Pro",
-  "short_name": "Result Manager",
+  "short_name": "EZEE Results",
   "description": "Offline result management for Class 4 to Class 10.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f3f7fa",
   "theme_color": "#0e446e",
-  "orientation": "portrait-primary",
+  "orientation": "any",
+  "categories": [
+    "education",
+    "productivity"
+  ],
   "icons": [
     {
       "src": "assets/logo.png",
