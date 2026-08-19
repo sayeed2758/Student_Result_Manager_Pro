@@ -3,6 +3,7 @@
 
   const STORAGE_KEY = 'ezee_student_result_manager_v1';
   const CLASSES = ['4','5','6','7','8','9','10'];
+  const TEACHERS = ['Shahid Sir','Enam Sir','Zeeshan Sir','Abdur Rahman Sir','Takmil Sir'];
   const $ = (id) => document.getElementById(id);
   const state = {
     db: loadDB(),
@@ -50,6 +51,7 @@
           name: String(e.name || e.title || 'Exam').trim() || 'Exam',
           totalMarks: Math.max(1, Number.parseInt(e.totalMarks, 10) || 100),
           date: String(e.date || ''),
+          teacherSignature: TEACHERS.includes(String(e.teacherSignature || '')) ? String(e.teacherSignature) : '',
           marks,
           statuses
         };
@@ -201,7 +203,7 @@
       const value = absent ? '' : escapeHTML(marks);
       return `<tr>
         <td>${students.indexOf(student)+1}</td>
-        <td><div class="student-name">${escapeHTML(student.name)}</div>
+        <td><button class="student-name student-profile-btn" type="button" data-profile-id="${escapeHTML(student.id)}" title="Open result profile">${escapeHTML(student.name)}</button>
           <div class="row-actions"><button class="mini edit-student" type="button" data-id="${escapeHTML(student.id)}">Edit</button>
           <button class="mini delete delete-student" type="button" data-id="${escapeHTML(student.id)}">Delete</button></div></td>
         <td><div class="mark-row">
@@ -245,7 +247,7 @@
     if (!CLASSES.includes(String(cls))) { toast('Invalid class.'); return false; }
     const d = state.db.classes[String(cls)];
     if (d.exams.some(e => e.name.toLowerCase() === name.toLowerCase() && e.date === date)) { toast('An exam with this name and date already exists.'); return false; }
-    const exam = {id:uid('exam'), name, totalMarks:total, date:date||todayISO(), marks:{}, statuses:{}};
+    const exam = {id:uid('exam'), name, totalMarks:total, date:date||todayISO(), teacherSignature:'', marks:{}, statuses:{}};
     d.students.forEach(s => {exam.marks[s.id]='';exam.statuses[s.id]='pending';});
     d.exams.push(exam);
     state.selectedClass = String(cls); state.selectedExamId = exam.id; state.search=''; $('searchInput').value='';
@@ -318,7 +320,7 @@
 
   function duplicateExam(id) {
     const source = classData().exams.find(e => e.id === id); if (!source) return;
-    const copy = {id:uid('exam'),name:`${source.name} — Copy`,totalMarks:source.totalMarks,date:todayISO(),marks:{},statuses:{}};
+    const copy = {id:uid('exam'),name:`${source.name} — Copy`,totalMarks:source.totalMarks,date:todayISO(),teacherSignature:'',marks:{},statuses:{}};
     classData().students.forEach(s => {copy.marks[s.id]='';copy.statuses[s.id]='pending';});
     classData().exams.push(copy);state.selectedExamId=copy.id;persist();renderAll();toast('Exam duplicated with fresh marks.');
   }
@@ -379,6 +381,38 @@
     });
   }
 
+  function openStudentProfileModal(id) {
+    const student = classData().students.find(s => s.id === id);
+    if (!student) return;
+    const exams = classData().exams.slice().sort((a,b) => (b.date||'').localeCompare(a.date||''));
+    let appeared = 0, absent = 0, pending = 0, sumPct = 0, highestPct = null;
+    const rows = exams.map((e, i) => {
+      ensureExamStudents(e);
+      const st = e.statuses[student.id] || 'pending';
+      const raw = e.marks[student.id];
+      let result = 'Pending', pct = null;
+      if (st === 'absent') { absent++; result = 'ABSENT'; }
+      else if (st === 'present' && raw !== '' && Number.isFinite(Number(raw))) {
+        appeared++; const mark = Number(raw); pct = e.totalMarks ? (mark / e.totalMarks) * 100 : 0;
+        sumPct += pct; highestPct = highestPct === null ? pct : Math.max(highestPct, pct);
+        result = `${mark} / ${e.totalMarks}`;
+      } else pending++;
+      return `<tr><td>${i+1}</td><td><b>${escapeHTML(e.name)}</b><small>${formatDate(e.date)}</small></td><td>${escapeHTML(result)}</td><td>${pct === null ? '—' : pct.toFixed(1) + '%'}</td></tr>`;
+    }).join('');
+    const average = appeared ? (sumPct / appeared).toFixed(1) + '%' : '—';
+    openModal(`<div class="modal-head"><div><span class="eyebrow">STUDENT RESULT PROFILE</span><h3>${escapeHTML(student.name)}</h3><p class="profile-subtitle">Class ${state.selectedClass} · Complete exam history</p></div><button class="close-modal" type="button" data-modal-close>×</button></div>
+      <div class="profile-stats">
+        <div><small>EXAMS</small><strong>${exams.length}</strong></div>
+        <div><small>APPEARED</small><strong>${appeared}</strong></div>
+        <div><small>ABSENT</small><strong>${absent}</strong></div>
+        <div><small>PENDING</small><strong>${pending}</strong></div>
+        <div><small>AVERAGE</small><strong>${average}</strong></div>
+        <div><small>BEST</small><strong>${highestPct === null ? '—' : highestPct.toFixed(1) + '%'}</strong></div>
+      </div>
+      <div class="profile-table-wrap">${exams.length ? `<table class="profile-table"><thead><tr><th>#</th><th>Exam</th><th>Marks</th><th>%</th></tr></thead><tbody>${rows}</tbody></table>` : `<div class="empty"><h3>No exam history</h3><p>This student has no saved exams yet.</p></div>`}</div>`, card => {
+      const first = card.querySelector('[data-modal-close]'); if (first) first.focus();
+    });
+  }
   function openStudentModal(editId='') {
     const student=editId ? classData().students.find(s=>s.id===editId) : null;
     openModal(`<div class="modal-head"><div><span class="eyebrow">STUDENT MANAGEMENT</span><h3>${editId?'Edit Student':'Add Student'}</h3></div><button class="close-modal" type="button" data-modal-close>×</button></div>
@@ -395,13 +429,14 @@
     const s=classData().students.find(x=>x.id===id);if(!s)return false;s.name=name;persist();renderAll();toast('Student updated.');return true;
   }
 
-  function openNewExamModal() {
+ function openNewExamModal() {
     openModal(`<div class="modal-head"><div><span class="eyebrow">EXAM MANAGEMENT</span><h3>Create New Exam</h3></div><button class="close-modal" type="button" data-modal-close>×</button></div>
       <form id="newExamForm" class="modal-form"><label class="field"><span>Class</span><select id="modalExamClass">${CLASSES.map(c=>`<option value="${c}" ${c===state.selectedClass?'selected':''}>Class ${c}</option>`).join('')}</select></label><label class="field"><span>Exam Name</span><input id="modalExamName" required maxlength="80" placeholder="e.g. Unit Test 1"></label><label class="field"><span>Total Marks</span><input id="modalExamMarks" type="number" min="1" step="1" inputmode="numeric" value="100" required></label><label class="field"><span>Date of Exam</span><input id="modalExamDate" type="date" value="${todayISO()}" required></label><div class="modal-actions"><button class="btn outline" type="button" data-modal-close>Cancel</button><button class="btn primary" type="submit">Create Exam</button></div></form>`,card=>{
       card.querySelector('#newExamForm').onsubmit=e=>{e.preventDefault();const ok=createExam(card.querySelector('#modalExamName').value,card.querySelector('#modalExamMarks').value,card.querySelector('#modalExamDate').value,card.querySelector('#modalExamClass').value);if(ok)closeModal();};
       setTimeout(()=>card.querySelector('#modalExamName').focus(),30);
     });
   }
+
   function openEditExamModal(id) {
     const e=classData().exams.find(x=>x.id===id);if(!e)return;
     openModal(`<div class="modal-head"><div><span class="eyebrow">EXAM MANAGEMENT</span><h3>Edit Exam</h3></div><button class="close-modal" type="button" data-modal-close>×</button></div>
@@ -409,49 +444,99 @@
       card.querySelector('#editExamModalForm').onsubmit=ev=>{ev.preventDefault();const ok=updateExam(e,card.querySelector('#modalEditExamName').value,card.querySelector('#modalEditExamMarks').value,card.querySelector('#modalEditExamDate').value);if(ok)closeModal();};
     });
   }
-
   function openToolsModal() {
     openModal(`<div class="modal-head"><div><span class="eyebrow">TOOLS</span><h3>Result Manager Tools</h3></div><button class="close-modal" type="button" data-modal-close>×</button></div><div class="tool-grid">
+      <button class="tool-card" type="button" id="toolInsights"><strong>Result Intelligence</strong><span>Class-wise performance overview and exam insights.</span></button>
       <button class="tool-card" type="button" id="toolBackup"><strong>Backup Data</strong><span>Download all classes, students and exams.</span></button>
-      <button class="tool-card" type="button" id="toolRestore"><strong>Restore Data</strong><span>Restore a previous JSON backup.</span></button>
+      <button class="tool-card" type="button" id="toolRestore"><strong>Restore Data</strong><span>Restore safely with an automatic safety backup.</span></button>
+      <button class="tool-card" type="button" id="toolHealth"><strong>Data Health</strong><span>Check records, storage and data integrity.</span></button>
       <button class="tool-card" type="button" id="toolCSV"><strong>Export CSV</strong><span>Export the selected exam table.</span></button>
-      <button class="tool-card" type="button" id="toolPrint"><strong>Print Result</strong><span>Open the professional A4 report.</span></button>
+      <button class="tool-card" type="button" id="toolPrint"><strong>Print Result</strong><span>Choose the teacher signature and open the A4 report.</span></button>
       <button class="tool-card" type="button" id="toolInstall"><strong>Install App</strong><span>Install the offline PWA when supported.</span></button>
     </div>`,card=>{
-      card.querySelector('#toolBackup').onclick=()=>{exportBackup();closeModal();};
+      card.querySelector('#toolInsights').onclick=()=>{closeModal();openResultIntelligenceModal();};
+      card.querySelector('#toolBackup').onclick=()=>{exportBackup('manual');closeModal();};
       card.querySelector('#toolRestore').onclick=()=>{closeModal();$('restoreFile').click();};
+      card.querySelector('#toolHealth').onclick=()=>{closeModal();openDataHealthModal();};
       card.querySelector('#toolCSV').onclick=()=>{exportCSV();closeModal();};
-      card.querySelector('#toolPrint').onclick=()=>{printResult();closeModal();};
+      card.querySelector('#toolPrint').onclick=()=>{closeModal();openPrintOptionsModal();};
       card.querySelector('#toolInstall').onclick=()=>{installApp();closeModal();};
     });
   }
 
-  function printResult() {
+  function openPrintOptionsModal() {
+    const e=currentExam();
+    if(!e){toast('Create or select an exam first.');return;}
+    const selected=TEACHERS.includes(e.teacherSignature)?e.teacherSignature:TEACHERS[0];
+    openModal(`<div class="modal-head"><div><span class="eyebrow">PRINT SETTINGS</span><h3>Teacher Signature</h3><p class="profile-subtitle">Select the teacher whose signature will appear on this exam report.</p></div><button class="close-modal" type="button" data-modal-close>×</button></div>
+      <form id="signatureForm" class="signature-form"><div class="signature-options">${TEACHERS.map((t,i)=>`<label class="signature-option"><input type="radio" name="teacherSignature" value="${escapeHTML(t)}" ${t===selected?'checked':''}><span><strong>${i+1}. ${escapeHTML(t)}</strong><small>Teacher Signature</small></span></label>`).join('')}</div>
+      <div class="modal-actions"><button class="btn outline" type="button" data-modal-close>Cancel</button><button class="btn dark" type="submit">Print Result</button></div></form>`,card=>{
+      card.querySelector('#signatureForm').onsubmit=ev=>{ev.preventDefault();const chosen=card.querySelector('input[name="teacherSignature"]:checked')?.value||TEACHERS[0];e.teacherSignature=chosen;persist();renderAll();closeModal();setTimeout(()=>printResult(e),40);};
+    });
+  }
+  function printResult(examOverride=null) {
+    const e=examOverride||currentExam();
+    if(!e){toast('Create or select an exam first.');return;}
+    ensureExamStudents(e);const s=stats(e);const teacher=TEACHERS.includes(e.teacherSignature)?e.teacherSignature:'';
+    if(!teacher && !examOverride){openPrintOptionsModal();return;}
+    const rows=classData().students.map((student,i)=>{const st=e.statuses[student.id]||'pending';const value=st==='absent'?'ABSENT':(e.marks[student.id]??'');return `<tr><td>${i+1}</td><td>${escapeHTML(student.name)}</td><td>${escapeHTML(value)}</td></tr>`}).join('');
+    const completed=s.present+s.absent;
+    const completion=s.total?Math.round((completed/s.total)*100):0;
+    $('printArea').innerHTML=`<div class="print-sheet"><div class="print-border"><div class="print-header"><img src="assets/logo.png" alt="EZEE VISION CHAMPUA"><div><div class="print-title">EZEE VISION CHAMPUA</div><div class="print-subtitle">STUDENT RESULT MANAGER PRO</div></div></div><div class="print-heading">EXAM RESULT SHEET</div><div class="print-info"><div><small>EXAM</small><strong>${escapeHTML(e.name)}</strong></div><div><small>CLASS</small><strong>Class ${state.selectedClass}</strong></div><div><small>DATE OF EXAM</small><strong>${formatDate(e.date)}</strong></div><div><small>TOTAL MARKS</small><strong>${e.totalMarks}</strong></div></div><div class="print-summary"><div><small>STUDENTS</small><strong>${s.total}</strong></div><div><small>PRESENT</small><strong>${s.present}</strong></div><div><small>ABSENT</small><strong>${s.absent}</strong></div><div><small>HIGHEST</small><strong>${s.highest??'—'}</strong></div><div><small>AVERAGE</small><strong>${s.present?s.average.toFixed(1):'—'}</strong></div></div><div class="print-completion">Result Entry Completion: <b>${completion}%</b></div><table class="print-table"><thead><tr><th>Sl. No.</th><th>Name of the Students</th><th>Marks</th></tr></thead><tbody>${rows||'<tr><td colspan="3">No students</td></tr>'}</tbody></table><div class="print-note">ABSENT = Student was absent in this examination. Pending entries are left blank.</div><div class="print-signature-row"><div class="print-coaching-note">EZEE VISION CHAMPUA<br><span>Student Result Manager Pro</span></div><div class="signature-box"><div class="signature-line"></div><strong>${escapeHTML(teacher||'Teacher')}</strong><small>Teacher’s Signature</small></div></div><div class="print-footer"><span>Class ${state.selectedClass} · ${escapeHTML(e.name)}</span><span>Generated on ${formatDate(todayISO())}</span></div></div></div>`;
+    window.print();
+  }
+ {
     const e=currentExam();if(!e){toast('Create or select an exam first.');return;}
     ensureExamStudents(e);const s=stats(e);
     const rows=classData().students.map((student,i)=>{const st=e.statuses[student.id]||'pending';const value=st==='absent'?'ABSENT':(e.marks[student.id] ?? '');return `<tr><td>${i+1}</td><td>${escapeHTML(student.name)}</td><td>${escapeHTML(value)}</td></tr>`}).join('');
     $('printArea').innerHTML=`<div class="print-sheet"><div class="print-header"><img src="assets/logo.png" alt="EZEE VISION CHAMPUA"><div><div class="print-title">EZEE VISION CHAMPUA</div><div class="print-subtitle">STUDENT RESULT MANAGER PRO</div></div></div><div class="print-heading">EXAM RESULT SHEET</div><div class="print-info"><div><small>EXAM</small><strong>${escapeHTML(e.name)}</strong></div><div><small>CLASS</small><strong>Class ${state.selectedClass}</strong></div><div><small>DATE OF EXAM</small><strong>${formatDate(e.date)}</strong></div><div><small>TOTAL MARKS</small><strong>${e.totalMarks}</strong></div></div><div class="print-summary"><div><small>STUDENTS</small><strong>${s.total}</strong></div><div><small>PRESENT</small><strong>${s.present}</strong></div><div><small>ABSENT</small><strong>${s.absent}</strong></div><div><small>HIGHEST</small><strong>${s.highest??'—'}</strong></div><div><small>AVERAGE</small><strong>${s.present?s.average.toFixed(1):'—'}</strong></div></div><table class="print-table"><thead><tr><th>Sl. No.</th><th>Name of the Students</th><th>Marks</th></tr></thead><tbody>${rows||'<tr><td colspan="3">No students</td></tr>'}</tbody></table><div class="print-note">ABSENT = Student was absent in this examination.</div><div class="print-footer"><span>EZEE VISION CHAMPUA</span><span>Teacher’s Signature: ____________________</span></div></div>`;
     window.print();
-  }
-
-  function exportCSV() {
+ }
+function exportCSV() {
     const e=currentExam();if(!e){toast('Select an exam first.');return;}ensureExamStudents(e);
     const lines=[['Sl. No.','Name of the Students','Marks / Status']];
     classData().students.forEach((s,i)=>{const st=e.statuses[s.id]||'pending';lines.push([i+1,s.name,st==='absent'?'ABSENT':(e.marks[s.id]??'')]);});
     const csv=lines.map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
     const url=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=`Class-${state.selectedClass}-${e.name.replace(/[^\w]+/g,'-')}.csv`;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);toast('CSV exported.');
   }
-  function exportBackup() {
-    const payload={app:'EZEE VISION CHAMPUA — Student Result Manager Pro',backupVersion:3,createdAt:new Date().toISOString(),data:state.db};
-    const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=`ezee-result-backup-${todayISO()}.json`;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);toast('Backup downloaded.');
+
+  function exportBackup(reason='manual', silent=false) {
+    const payload={app:'EZEE VISION CHAMPUA — Student Result Manager Pro',backupVersion:4,createdAt:new Date().toISOString(),reason,data:state.db};
+    const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
+    const a=document.createElement('a');a.href=url;a.download=`ezee-result-backup-${reason}-${todayISO()}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    if(!silent)toast('Backup downloaded.');
+  }
+
+  function validateBackupDB(db) {
+    if(!db || typeof db!=='object' || !db.classes || typeof db.classes!=='object') return {ok:false,error:'Missing class data.'};
+    for(const c of CLASSES){const d=db.classes[c];if(!d||!Array.isArray(d.students)||!Array.isArray(d.exams))return {ok:false,error:`Class ${c} data is invalid.`};}
+    return {ok:true};
+  }
+  function dataHealth() {
+    const issues=[];let students=0,exams=0,marks=0,absent=0,pending=0;
+    for(const c of CLASSES){const d=state.db.classes[c];students+=d.students.length;exams+=d.exams.length;const ids=new Set(d.students.map(s=>s.id));if(ids.size!==d.students.length)issues.push(`Class ${c}: duplicate student IDs.`);for(const e of d.exams){if(!e.name||!Number.isInteger(e.totalMarks)||e.totalMarks<1)issues.push(`Class ${c}: invalid exam “${e.name||'Unnamed'}”.`);for(const s of d.students){const st=e.statuses[s.id]||'pending';if(st==='absent')absent++;else if(st==='pending')pending++;else if(st==='present'&&e.marks[s.id]!==''&&e.marks[s.id]!=null)marks++;}}}
+    return {students,exams,marks,absent,pending,issues};
+  }
+
+  function openDataHealthModal() {
+    const h=dataHealth();const storageBytes=new Blob([JSON.stringify(state.db)]).size;const kb=(storageBytes/1024).toFixed(1);
+    openModal(`<div class="modal-head"><div><span class="eyebrow">DATA SAFETY PRO</span><h3>Data Health</h3><p class="profile-subtitle">A quick integrity check of your local result database.</p></div><button class="close-modal" type="button" data-modal-close>×</button></div><div class="profile-stats"><div><small>STUDENTS</small><strong>${h.students}</strong></div><div><small>EXAMS</small><strong>${h.exams}</strong></div><div><small>MARKS SAVED</small><strong>${h.marks}</strong></div><div><small>ABSENT</small><strong>${h.absent}</strong></div><div><small>PENDING</small><strong>${h.pending}</strong></div><div><small>STORAGE</small><strong>${kb} KB</strong></div></div><div class="health-box ${h.issues.length?'has-issues':'healthy'}"><strong>${h.issues.length?'Attention needed':'Data looks healthy'}</strong><p>${h.issues.length?h.issues.map(escapeHTML).join('<br>'):'No structural problems were found in Class 4–10 records.'}</p></div><div class="modal-actions"><button class="btn outline" type="button" data-health-backup>Download Safety Backup</button><button class="btn primary" type="button" data-modal-close>Done</button></div>`,card=>{card.querySelector('[data-health-backup]').onclick=()=>exportBackup('safety');});
   }
 
   function importBackup(file) {
-    if(!file)return;const reader=new FileReader();reader.onload=async()=>{try{const parsed=JSON.parse(reader.result);const db=normalizeDB(parsed?.data||parsed);const students=CLASSES.reduce((n,c)=>n+db.classes[c].students.length,0);const exams=CLASSES.reduce((n,c)=>n+db.classes[c].exams.length,0);if(!await confirmAction('Restore backup?',`Students: ${students}\nExams: ${exams}\n\nCurrent browser data will be replaced.`,'Restore',true))return;state.db=db;state.selectedClass='4';state.selectedExamId=null;state.search='';$('searchInput').value='';persist();renderAll();toast('Backup restored successfully.');}catch(err){console.error(err);toast('Invalid backup file.');}};reader.readAsText(file);
+    if(!file)return;const reader=new FileReader();reader.onload=async()=>{try{const parsed=JSON.parse(reader.result);const db=normalizeDB(parsed?.data||parsed);const validation=validateBackupDB(db);if(!validation.ok)throw new Error(validation.error);const students=CLASSES.reduce((n,c)=>n+db.classes[c].students.length,0);const exams=CLASSES.reduce((n,c)=>n+db.classes[c].exams.length,0);if(!await confirmAction('Restore backup?',`Students: ${students}\nExams: ${exams}\n\nA safety backup of the current data will be downloaded before replacement.`,'Restore',true))return;exportBackup('pre-restore',true);state.db=db;state.selectedClass='4';state.selectedExamId=null;state.search='';$('searchInput').value='';persist();renderAll();toast('Backup restored safely.');}catch(err){console.error(err);toast(`Invalid backup file: ${err.message||'Unknown format'}`);}};reader.readAsText(file);
+  }
+  function openResultIntelligenceModal() {
+    const d=classData();const exams=d.exams.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    let totalMarks=0,totalPossible=0,completed=0,absent=0,pending=0,bestExam=null;
+    const examCards=exams.map(e=>{const s=stats(e);const completion=s.total?Math.round(((s.present+s.absent)/s.total)*100):0;const pct=s.present?((s.average/e.totalMarks)*100):0;completed+=s.present;absent+=s.absent;pending+=s.pending;totalMarks+=s.present?s.average*s.present:0;totalPossible+=s.present?e.totalMarks*s.present:0;if(s.present&&(!bestExam||pct>bestExam.pct))bestExam={name:e.name,pct};return `<article class="insight-card"><div class="insight-top"><strong>${escapeHTML(e.name)}</strong><span>${completion}% complete</span></div><div class="insight-bar"><i style="width:${completion}%"></i></div><div class="insight-meta">${s.present} present · ${s.absent} absent · ${s.pending} pending · Avg ${s.present?s.average.toFixed(1):'—'} / ${e.totalMarks}</div></article>`}).join('');
+    const overallPct=totalPossible?((totalMarks/totalPossible)*100):0;
+    openModal(`<div class="modal-head"><div><span class="eyebrow">PHASE 27 · RESULT INTELLIGENCE</span><h3>Class ${state.selectedClass} Overview</h3><p class="profile-subtitle">A compact performance and completion dashboard.</p></div><button class="close-modal" type="button" data-modal-close>×</button></div><div class="profile-stats"><div><small>STUDENTS</small><strong>${d.students.length}</strong></div><div><small>EXAMS</small><strong>${exams.length}</strong></div><div><small>MARKS ENTERED</small><strong>${completed}</strong></div><div><small>ABSENT</small><strong>${absent}</strong></div><div><small>PENDING</small><strong>${pending}</strong></div><div><small>OVERALL AVG</small><strong>${totalPossible?overallPct.toFixed(1)+'%':'—'}</strong></div></div><div class="insight-highlight">${bestExam?`<b>Best exam average:</b> ${escapeHTML(bestExam.name)} · ${bestExam.pct.toFixed(1)}%`:'No completed exam result yet.'}</div><div class="insight-list">${examCards||'<div class="empty"><h3>No exams yet</h3><p>Create an exam to see result intelligence.</p></div>'}</div>`,card=>{const first=card.querySelector('[data-modal-close]');if(first)first.focus();});
   }
 
   async function installApp() {
-    if(!state.deferredPrompt){toast('Install is not available in this browser yet.');return;}
+    if(window.matchMedia('(display-mode: standalone)').matches){toast('App is already installed.');return;}
+    if(!state.deferredPrompt){toast('Install is not available in this browser yet. Use browser menu → Add to Home screen.');return;}
     state.deferredPrompt.prompt();await state.deferredPrompt.userChoice;state.deferredPrompt=null;$('installBtn').classList.add('hidden');toast('Install prompt completed.');
   }
 
@@ -461,20 +546,22 @@
     $('examSelect').addEventListener('change',e=>{state.selectedExamId=e.target.value||null;renderAll();});
     $('searchInput').addEventListener('input',e=>{state.search=e.target.value;renderTable();});
     $('newExamBtn').addEventListener('click',openNewExamModal);
+    $('classInsightsBtn').addEventListener('click',openResultIntelligenceModal);
     $('addStudentBtn').addEventListener('click',()=>openStudentModal());
     $('emptyState').addEventListener('click',e=>{if(e.target.closest('#emptyAddBtn'))openStudentModal();if(e.target.closest('#historyNewExam'))openNewExamModal();});
     $('saveExamBtn').addEventListener('click',saveCurrentExam);
-    $('printBtn').addEventListener('click',printResult);
+    $('printBtn').addEventListener('click',openPrintOptionsModal);
     $('markPendingAbsentBtn').addEventListener('click',markAllPendingAbsent);
     $('exportCsvBtn').addEventListener('click',exportCSV);
-    $('backupBtn').addEventListener('click',exportBackup);
+    $('backupBtn').addEventListener('click',()=>exportBackup('manual'));
     $('restoreBtn').addEventListener('click',()=>$('restoreFile').click());
     $('toolsBtn').addEventListener('click',openToolsModal);
     $('restoreFile').addEventListener('change',e=>{importBackup(e.target.files[0]);e.target.value='';});
 
     $('resultBody').addEventListener('click',e=>{
-      const edit=e.target.closest('.edit-student');const del=e.target.closest('.delete-student');const status=e.target.closest('[data-status-id]');
-      if(edit)openStudentModal(edit.dataset.id);
+      const profile=e.target.closest('.student-profile-btn');const edit=e.target.closest('.edit-student');const del=e.target.closest('.delete-student');const status=e.target.closest('[data-status-id]');
+      if(profile)openStudentProfileModal(profile.dataset.profileId);
+      else if(edit)openStudentModal(edit.dataset.id);
       else if(del)deleteStudent(del.dataset.id);
       else if(status)toggleAbsent(status.dataset.statusId);
     });
@@ -486,10 +573,12 @@
     window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('modalRoot').classList.contains('hidden'))closeModal();});
     window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();state.deferredPrompt=e;$('installBtn').classList.remove('hidden');});
     $('installBtn').addEventListener('click',installApp);
-    if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(err=>console.warn('Service worker:',err)));
+    window.addEventListener('online',()=>toast('Back online. Local data remains available.'));
+    window.addEventListener('offline',()=>toast('Offline mode active. Saved data will continue to work.'));
+    if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').then(reg=>{reg.addEventListener('updatefound',()=>toast('App update available. Refresh after saving your work.'));}).catch(err=>console.warn('Service worker:',err)));
   }
 
   bindEvents();
   renderAll();
 })();
-
+                                                             
