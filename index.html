@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#123f66">
+<meta name="theme-color" content="#0e446e">
 <meta name="description" content="EZEE VISION CHAMPUA Student Result Manager Pro">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="assets/image.svg.png" type="image/svg+xml">
@@ -11,178 +11,81 @@
 <title>Student Result Manager Pro — EZEE VISION CHAMPUA</title>
 </head>
 <body>
-<div class="app-shell">
-<header class="site-header">
-  <div class="brand">
-    <img src="assets/image.svg.png" class="brand-logo" alt="EZEE VISION CHAMPUA">
-    <div class="brand-copy">
-      <h1>EZEE VISION CHAMPUA</h1>
-      <p>Student Result Manager Pro</p>
+<div id="app" class="app">
+  <header class="topbar">
+    <div class="brand">
+      <img src="assets/image.svg.png" alt="EZEE VISION CHAMPUA" class="brand-logo">
+      <div class="brand-text"><h1>EZEE VISION CHAMPUA</h1><p>Student Result Manager Pro</p></div>
     </div>
-  </div>
-  <div class="header-tools">
-    <button id="backupBtn" class="header-btn desktop-only" type="button">Backup</button>
-    <button id="restoreBtn" class="header-btn desktop-only" type="button">Restore</button>
-    <button id="installBtn" class="header-btn desktop-only hidden" type="button">Install</button>
-    <button id="menuBtn" class="menu-btn" type="button" aria-label="More options">⋮</button>
-    <input id="restoreInput" type="file" accept=".json,application/json" hidden>
-  </div>
-</header>
-
-<main class="container">
-  <section class="dashboard-card">
-    <div class="section-heading">
-      <div>
-        <span class="eyebrow">RESULT MANAGEMENT</span>
-        <h2>Student Result Manager</h2>
-        <p class="subtle">Classes 4–10 are stored separately.</p>
-      </div>
-      <button id="newExamBtn" class="btn btn-primary" type="button">+ New Exam</button>
+    <div class="top-actions">
+      <button class="top-btn desktop-tool" id="backupBtn" type="button">Backup</button>
+      <button class="top-btn desktop-tool" id="restoreBtn" type="button">Restore</button>
+      <button class="top-btn desktop-tool hidden" id="installBtn" type="button">Install</button>
+      <button class="menu-btn" id="toolsBtn" type="button" aria-label="Open tools">⋮</button>
     </div>
-    <div id="classDashboard" class="class-grid"></div>
-  </section>
+  </header>
 
-  <section class="workspace">
-    <div class="card">
-      <div class="section-heading compact">
-        <div>
-          <span class="eyebrow">CURRENT EXAM</span>
-          <h2>Exam Information</h2>
-        </div>
-        <span id="saveStatus" class="save-status">Saved locally</span>
+  <main class="page">
+    <section class="panel classes-panel">
+      <div class="panel-head">
+        <div><span class="eyebrow">RESULT MANAGEMENT</span><h2>Student Result Manager</h2><p>Class 4 to Class 10 — completely separate records.</p></div>
+        <button id="newExamBtn" class="btn primary" type="button">+ New Exam</button>
       </div>
+      <div id="classGrid" class="class-grid"></div>
+    </section>
 
+    <section class="panel exam-panel">
+      <div class="panel-head small">
+        <div><span class="eyebrow">CURRENT EXAM</span><h2>Exam Information</h2></div>
+        <span id="saveBadge" class="save-badge">Saved locally</span>
+      </div>
       <div class="form-grid">
-        <label class="field">
-          <span>Class</span>
-          <select id="classSelect">
-            <option value="4">Class 4</option><option value="5">Class 5</option>
-            <option value="6">Class 6</option><option value="7">Class 7</option>
-            <option value="8">Class 8</option><option value="9">Class 9</option>
-            <option value="10">Class 10</option>
-          </select>
-        </label>
-        <label class="field field-wide">
-          <span>Exam</span>
-          <select id="examSelect"><option value="">No exam selected</option></select>
-        </label>
-        <label class="field">
-          <span>Total Marks</span>
-          <input id="totalMarks" type="number" min="1" step="1" inputmode="numeric" placeholder="100">
-        </label>
-        <label class="field">
-          <span>Date of Exam</span>
-          <input id="examDate" type="date">
-        </label>
+        <label class="field"><span>Class</span><select id="classSelect">
+          <option value="4">Class 4</option><option value="5">Class 5</option><option value="6">Class 6</option><option value="7">Class 7</option><option value="8">Class 8</option><option value="9">Class 9</option><option value="10">Class 10</option>
+        </select></label>
+        <label class="field wide"><span>Exam</span><select id="examSelect"><option value="">No exam selected</option></select></label>
+        <label class="field"><span>Total Marks</span><input id="totalMarks" type="number" min="1" step="1" inputmode="numeric" placeholder="100"></label>
+        <label class="field"><span>Date of Exam</span><input id="examDate" type="date"></label>
       </div>
+      <div class="exam-foot"><div id="examCaption" class="muted">No exam selected</div><div class="action-row"><button id="saveExamBtn" class="btn secondary" type="button">Save</button><button id="printBtn" class="btn dark" type="button">Print Result</button></div></div>
+    </section>
 
-      <div class="exam-bottom">
-        <div id="examQuickInfo" class="exam-quick-info">No exam selected</div>
-        <div class="exam-actions">
-          <button id="saveExamBtn" class="btn btn-secondary" type="button">Save</button>
-          <button id="printBtn" class="btn btn-dark" type="button">Print Result</button>
-        </div>
+    <section id="analytics" class="stat-grid"></section>
+
+    <section class="panel students-panel">
+      <div class="panel-head small">
+        <div><span class="eyebrow">STUDENTS &amp; MARKS</span><h2>Marks Entry</h2></div>
+        <button id="addStudentBtn" class="btn primary" type="button">+ Add Student</button>
       </div>
-    </div>
-
-    <section id="analyticsCard" class="analytics-grid"></section>
-
-    <div class="card student-card">
-      <div class="section-heading compact">
-        <div>
-          <span class="eyebrow">STUDENTS & MARKS</span>
-          <h2>Marks Entry</h2>
-        </div>
-        <button id="addStudentBtn" class="btn btn-primary" type="button">+ Add Student</button>
-      </div>
-
       <div class="toolbar">
-        <div class="search-box"><span aria-hidden="true">⌕</span><input id="searchInput" type="search" placeholder="Search student" autocomplete="off"></div>
-        <div class="toolbar-right">
-          <span id="studentCount" class="count-badge">0 Students</span>
-          <span id="pendingBadge" class="pending-badge">0 Pending</span>
-        </div>
+        <label class="search"><span>⌕</span><input id="searchInput" type="search" placeholder="Search student" autocomplete="off"></label>
+        <div class="toolbar-stats"><span id="studentCount">0 Students</span><span id="pendingCount" class="pill pending">0 Pending</span></div>
       </div>
-
-      <div class="bulk-bar">
-        <button id="bulkAbsentBtn" class="tool-link" type="button">Mark all pending as Absent</button>
-        <button id="csvBtn" class="tool-link" type="button">Export CSV</button>
+      <div class="quick-tools"><button id="markPendingAbsentBtn" class="text-btn" type="button">Mark all pending as Absent</button><button id="exportCsvBtn" class="text-btn" type="button">Export CSV</button></div>
+      <div id="entryTip" class="tip hidden">Enter marks and press <b>Enter</b> to move to the next student.</div>
+      <div class="table-shell">
+        <table id="resultTable"><thead><tr><th>Sl. No.</th><th>Name of the Students</th><th>Marks / Status</th></tr></thead><tbody id="resultBody"></tbody></table>
       </div>
+      <div id="emptyState" class="empty hidden"><div class="empty-icon">+</div><h3>No students found</h3><p>Add students to this class to start result entry.</p><button id="emptyAddBtn" class="btn primary" type="button">Add Student</button></div>
+    </section>
 
-      <div id="entryHint" class="entry-hint hidden">Enter marks and press <strong>Enter</strong> for the next student.</div>
-
-      <div class="table-wrap">
-        <table id="resultTable">
-          <thead><tr><th>Sl. No.</th><th>Name of the Students</th><th>Marks / Status</th></tr></thead>
-          <tbody id="resultBody"></tbody>
-        </table>
-      </div>
-
-      <div id="emptyState" class="empty-state hidden">
-        <div class="empty-icon">+</div>
-        <h3>No students found</h3>
-        <p>Add students to this class to start entering marks.</p>
-        <button class="btn btn-primary" type="button" data-empty-add>Add Student</button>
-      </div>
-    </div>
-
-    <div class="card history-card">
-      <div class="section-heading compact">
-        <div><span class="eyebrow">EXAM HISTORY</span><h2>Previous Exams</h2></div>
-      </div>
-      <div id="examHistory" class="history-list"></div>
-    </div>
-  </section>
-</main>
-
-<dialog id="menuDialog" class="dialog small-dialog">
-<form method="dialog">
-  <div class="dialog-header"><div><span class="eyebrow">TOOLS</span><h2>More Options</h2></div><button class="icon-btn" value="cancel" type="submit">×</button></div>
-  <div class="tool-grid">
-    <button id="menuBackup" class="tool-card" type="button"><strong>Backup</strong><span>Save all data to JSON</span></button>
-    <button id="menuRestore" class="tool-card" type="button"><strong>Restore</strong><span>Import previous backup</span></button>
-    <button id="menuCsv" class="tool-card" type="button"><strong>Export CSV</strong><span>Export the current exam</span></button>
-    <button id="menuInstall" class="tool-card hidden" type="button"><strong>Install App</strong><span>Add it to your device</span></button>
-  </div>
-</form>
-</dialog>
-
-<dialog id="studentDialog" class="dialog">
-<form method="dialog" id="studentForm">
-  <div class="dialog-header"><div><span class="eyebrow">STUDENT</span><h2 id="studentDialogTitle">Add Student</h2></div><button class="icon-btn" value="cancel" type="submit">×</button></div>
-  <label class="field"><span>Student Name</span><input id="studentName" type="text" maxlength="100" required></label>
-  <input id="editingStudentId" type="hidden">
-  <div class="dialog-actions"><button class="btn btn-outline-dark" value="cancel">Cancel</button><button id="studentSubmit" class="btn btn-primary" value="default">Add Student</button></div>
-</form>
-</dialog>
-
-<dialog id="examDialog" class="dialog">
-<form method="dialog" id="examForm">
-  <div class="dialog-header"><div><span class="eyebrow">EXAM SETUP</span><h2>New Exam</h2></div><button class="icon-btn" value="cancel" type="submit">×</button></div>
-  <label class="field"><span>Class</span><select id="newExamClass"><option value="4">Class 4</option><option value="5">Class 5</option><option value="6">Class 6</option><option value="7">Class 7</option><option value="8">Class 8</option><option value="9">Class 9</option><option value="10">Class 10</option></select></label>
-  <label class="field"><span>Exam Name</span><input id="newExamName" maxlength="80" placeholder="e.g. August Test" required></label>
-  <label class="field"><span>Total Marks</span><input id="newExamMarks" type="number" min="1" step="1" value="100" required></label>
-  <label class="field"><span>Date of Exam</span><input id="newExamDate" type="date" required></label>
-  <div class="dialog-actions"><button class="btn btn-outline-dark" value="cancel">Cancel</button><button class="btn btn-primary" value="default">Create Exam</button></div>
-</form>
-</dialog>
-
-<dialog id="editExamDialog" class="dialog">
-<form method="dialog" id="editExamForm">
-  <div class="dialog-header"><div><span class="eyebrow">EXAM MANAGEMENT</span><h2>Edit Exam</h2></div><button class="icon-btn" value="cancel" type="submit">×</button></div>
-  <input id="editingExamId" type="hidden">
-  <label class="field"><span>Exam Name</span><input id="editExamName" maxlength="80" required></label>
-  <label class="field"><span>Total Marks</span><input id="editExamMarks" type="number" min="1" step="1" required></label>
-  <label class="field"><span>Date of Exam</span><input id="editExamDate" type="date" required></label>
-  <div class="dialog-actions"><button class="btn btn-outline-dark" value="cancel">Cancel</button><button class="btn btn-primary" value="default">Save Changes</button></div>
-</form>
-</dialog>
-
-<div id="toast" class="toast" role="status" aria-live="polite"></div>
-<footer class="site-footer">Made With ❤️ By Shahid Sir</footer>
+    <section class="panel history-panel">
+      <div class="panel-head small"><div><span class="eyebrow">EXAM HISTORY</span><h2>Previous Exams</h2></div></div>
+      <div id="examHistory" class="history-grid"></div>
+    </section>
+  </main>
+  <footer class="footer">Made With ❤️ By Shahid Sir</footer>
 </div>
 
-<section id="printArea" class="print-area" aria-hidden="true"></section>
+<div id="modalRoot" class="modal-root hidden" aria-hidden="true">
+  <div class="modal-backdrop" data-close-modal></div>
+  <div id="modalCard" class="modal-card" role="dialog" aria-modal="true"></div>
+</div>
+
+<div id="toast" class="toast" aria-live="polite"></div>
+<input id="restoreFile" type="file" accept="application/json,.json" hidden>
+<section id="printArea" aria-hidden="true"></section>
 <script src="app.js"></script>
 </body>
 </html>
+
