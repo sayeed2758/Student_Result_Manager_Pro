@@ -1,4 +1,4 @@
-const CACHE_NAME = "ezee-result-manager-v1";
+const CACHE_NAME = "ezee-result-manager-v2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -35,3 +35,4 @@ self.addEventListener("fetch", event => {
     })
   );
 });
+
