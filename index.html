@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#173b63">
+  <meta name="description" content="EZEE VISION CHAMPUA Student Result Manager Pro">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+  <title>Student Result Manager Pro — EZEE VISION CHAMPUA</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <div class="brand">
+        <img src="assets/icon.svg" alt="EZEE VISION CHAMPUA logo" class="brand-logo">
+        <div>
+          <h1>EZEE VISION CHAMPUA</h1>
+          <p>Student Result Manager Pro</p>
+        </div>
+      </div>
+      <button id="installBtn" class="btn btn-outline hidden" type="button">Install App</button>
+    </header>
+
+    <main class="container">
+      <section class="dashboard-card">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">RESULT MANAGEMENT</span>
+            <h2>Student Result Manager</h2>
+          </div>
+          <button id="newExamBtn" class="btn btn-primary" type="button">+ New Exam</button>
+        </div>
+
+        <div class="class-grid" id="classDashboard"></div>
+      </section>
+
+      <section class="workspace">
+        <div class="card exam-card">
+          <div class="section-heading compact">
+            <div>
+              <span class="eyebrow">CURRENT EXAM</span>
+              <h2>Exam Information</h2>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <label class="field">
+              <span>Class</span>
+              <select id="classSelect">
+                <option value="4">Class 4</option>
+                <option value="5">Class 5</option>
+                <option value="6">Class 6</option>
+                <option value="7">Class 7</option>
+                <option value="8">Class 8</option>
+                <option value="9">Class 9</option>
+                <option value="10">Class 10</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Exam</span>
+              <select id="examSelect">
+                <option value="">No exam selected</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Total Marks</span>
+              <input id="totalMarks" type="number" min="1" step="1" inputmode="numeric" placeholder="100">
+            </label>
+
+            <label class="field">
+              <span>Date of Exam</span>
+              <input id="examDate" type="date">
+            </label>
+          </div>
+
+          <div class="exam-actions">
+            <button id="saveExamBtn" class="btn btn-secondary" type="button">Save</button>
+            <button id="printBtn" class="btn btn-dark" type="button">Print Result</button>
+          </div>
+        </div>
+
+        <div class="card student-card">
+          <div class="section-heading compact">
+            <div>
+              <span class="eyebrow">STUDENTS</span>
+              <h2>Marks Table</h2>
+            </div>
+            <button id="addStudentBtn" class="btn btn-primary" type="button">+ Add Student</button>
+          </div>
+
+          <div class="toolbar">
+            <div class="search-box">
+              <span aria-hidden="true">⌕</span>
+              <input id="searchInput" type="search" placeholder="Search student" autocomplete="off">
+            </div>
+            <span id="studentCount" class="count-badge">0 Students</span>
+          </div>
+
+          <div class="table-wrap">
+            <table id="resultTable">
+              <thead>
+                <tr>
+                  <th>Sl. No.</th>
+                  <th>Name of the Students</th>
+                  <th>Marks</th>
+                </tr>
+              </thead>
+              <tbody id="resultBody"></tbody>
+            </table>
+          </div>
+
+          <div id="emptyState" class="empty-state hidden">
+            <div class="empty-icon">+</div>
+            <h3>No students found</h3>
+            <p>Add students to this class to start entering marks.</p>
+            <button class="btn btn-primary" type="button" data-empty-add>Add Student</button>
+          </div>
+        </div>
+
+        <div class="card history-card">
+          <div class="section-heading compact">
+            <div>
+              <span class="eyebrow">EXAM HISTORY</span>
+              <h2>Previous Exams</h2>
+            </div>
+          </div>
+          <div id="examHistory" class="history-list"></div>
+        </div>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <dialog id="studentDialog" class="dialog">
+      <form method="dialog" id="studentForm">
+        <div class="dialog-header">
+          <div>
+            <span class="eyebrow">STUDENT</span>
+            <h2 id="studentDialogTitle">Add Student</h2>
+          </div>
+          <button class="icon-btn" value="cancel" type="submit" aria-label="Close">×</button>
+        </div>
+        <label class="field">
+          <span>Student Name</span>
+          <input id="studentName" type="text" maxlength="100" autocomplete="off" required>
+        </label>
+        <input id="editingStudentId" type="hidden">
+        <div class="dialog-actions">
+          <button class="btn btn-outline" value="cancel" type="submit">Cancel</button>
+          <button id="studentSubmit" class="btn btn-primary" value="default" type="submit">Add Student</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="examDialog" class="dialog">
+      <form method="dialog" id="examForm">
+        <div class="dialog-header">
+          <div>
+            <span class="eyebrow">EXAM SETUP</span>
+            <h2>New Exam</h2>
+          </div>
+          <button class="icon-btn" value="cancel" type="submit" aria-label="Close">×</button>
+        </div>
+        <label class="field">
+          <span>Class</span>
+          <select id="newExamClass">
+            <option value="4">Class 4</option>
+            <option value="5">Class 5</option>
+            <option value="6">Class 6</option>
+            <option value="7">Class 7</option>
+            <option value="8">Class 8</option>
+            <option value="9">Class 9</option>
+            <option value="10">Class 10</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Exam Name</span>
+          <input id="newExamName" type="text" maxlength="80" placeholder="e.g. August Test" required>
+        </label>
+        <label class="field">
+          <span>Total Marks</span>
+          <input id="newExamMarks" type="number" min="1" step="1" inputmode="numeric" value="100" required>
+        </label>
+        <label class="field">
+          <span>Date of Exam</span>
+          <input id="newExamDate" type="date" required>
+        </label>
+        <div class="dialog-actions">
+          <button class="btn btn-outline" value="cancel" type="submit">Cancel</button>
+          <button class="btn btn-primary" value="default" type="submit">Create Exam</button>
+        </div>
+      </form>
+    </dialog>
+
+    <footer class="site-footer">Made With ❤️ By Shahid Sir</footer>
+  </div>
+
+  <section id="printArea" class="print-area" aria-hidden="true"></section>
+  <script src="app.js"></script>
+</body>
+</html>
+
