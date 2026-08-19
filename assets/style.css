@@ -17,3 +17,12 @@
 @media(max-width:390px){.brand-text h1{font-size:12px}.classes-panel .panel-head .btn.primary{font-size:12px}.mark-input{width:61px}.status-btn{font-size:8px;padding:0 4px}.panel h2{font-size:16px}}
 @media print{body{background:#fff}body>*:not(#printArea){display:none!important}#printArea{display:block!important}@page{size:A4 portrait;margin:13mm}.print-sheet{font-family:Arial,sans-serif;color:#111}.print-header{display:flex;align-items:center;gap:12px;border-bottom:2px solid #0e446e;padding-bottom:10px;margin-bottom:12px}.print-header img{width:54px;height:54px}.print-title{font-size:20px;font-weight:800}.print-subtitle{font-size:10px;color:#555;margin-top:3px}.print-info{display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid #999;margin-bottom:10px}.print-info>div{padding:7px;border-right:1px solid #999}.print-info>div:last-child{border-right:0}.print-info small{display:block;font-size:8px;color:#666}.print-info strong{font-size:11px}.print-summary{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid #999;margin-bottom:12px}.print-summary>div{padding:7px;text-align:center;border-right:1px solid #999}.print-summary>div:last-child{border-right:0}.print-summary small{display:block;font-size:8px;color:#666}.print-summary strong{font-size:10px}.print-table{width:100%;border-collapse:collapse}.print-table th,.print-table td{border:1px solid #777;padding:7px;font-size:10.5px}.print-table th{background:#eef3f7;color:#111}.print-table th:first-child,.print-table td:first-child{text-align:center;width:55px}.print-table th:last-child,.print-table td:last-child{text-align:center;width:90px}.print-footer{display:flex;justify-content:space-between;border-top:1px solid #bbb;padding-top:8px;margin-top:24px;font-size:9px;color:#666}.print-warning{margin-top:9px;font-size:8px;color:#777}}
              
+
+/* Result-manager print refinements */
+.print-heading{text-align:center;font-size:15px;font-weight:800;letter-spacing:1px;margin:-3px 0 11px;color:#0e446e}
+.print-note{font-size:8px;color:#666;margin-top:7px}
+@media print{.print-heading{font-size:15px}.print-note{font-size:8px}}
+
+.btn:disabled,.text-btn:disabled{cursor:not-allowed;opacity:.55}
+@media(max-width:650px){.top-actions{margin-left:auto}.brand{min-width:0}.brand-text{overflow:hidden}.brand-text h1,.brand-text p{overflow:hidden;text-overflow:ellipsis}.panel-head.small .btn{width:auto}.history-actions{flex-wrap:wrap}}
+  
