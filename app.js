@@ -166,8 +166,27 @@
     `).join("");
   }
 
+
+  function getExamStats(exam) {
+    const students=classData().students;
+    const values=students.map(s=>exam ? exam.marks[s.id] : "").filter(v=>v!=="" && Number.isFinite(Number(v))).map(Number);
+    return {total:students.length, entered:values.length, pending:students.length-values.length,
+      highest:values.length?Math.max(...values):0, lowest:values.length?Math.min(...values):0,
+      average:values.length?values.reduce((a,b)=>a+b,0)/values.length:0};
+  }
+  function renderAnalytics() {
+    const e=currentExam(), s=getExamStats(e);
+    $("analyticsCard").innerHTML = e ? [
+      ["Students",s.total,""],["Entered",s.entered,""],["Pending",s.pending,"pending"],
+      ["Highest",s.entered?s.highest:"—",""],["Lowest",s.entered?s.lowest:"—",""],["Average",s.entered?s.average.toFixed(1):"—",""]
+    ].map(x=>`<div class="stat-card ${x[2]}"><span class="label">${x[0]}</span><div class="value">${x[1]}</div></div>`).join("") :
+      `<div class="stat-card"><span class="label">Students</span><div class="value">${s.total}</div></div><div class="stat-card"><span class="label">Exams</span><div class="value">${classData().exams.length}</div></div>`;
+    $("pendingBadge").textContent=`${s.pending} Pending`;
+  }
   function renderAll() {
     renderClassDashboard();
+    $("classSelect").value=state.selectedClass;
+    $("newExamClass").value=state.selectedClass;
     renderExamSelect();
     renderTable();
     renderHistory();
@@ -299,6 +318,9 @@
     }
     exam.marks[studentId] = value;
     persist();
+    input.classList.add("saved");
+    setTimeout(() => input.classList.remove("saved"), 350);
+    renderAnalytics();
   }
 
   function openStudentDialog(studentId = "") {
@@ -325,15 +347,14 @@
   }
 
   function editExam(id) {
-    const exam = classData().exams.find(e => e.id === id);
-    if (!exam) return;
-    const name = prompt("Exam name:", exam.name);
-    if (name === null) return;
-    const total = prompt("Total marks:", exam.totalMarks);
-    if (total === null) return;
-    const date = prompt("Date (YYYY-MM-DD):", exam.date);
-    if (date === null) return;
-    updateExam(exam, name, total, date);
+    const exam=classData().exams.find(e=>e.id===id);
+    if(!exam)return;
+    $("editingExamId").value=id;
+    $("editExamName").value=exam.name;
+    $("editExamMarks").value=exam.totalMarks;
+    $("editExamDate").value=exam.date;
+    $("editExamDialog").showModal();
+    setTimeout(()=>$('editExamName').focus(),50);
   }
 
   function printResult() {
@@ -354,6 +375,7 @@
           <div><small>Total Marks</small><strong>${escapeHTML(exam.totalMarks)}</strong></div>
           <div><small>Class · Date</small><strong>Class ${escapeHTML(state.selectedClass)} · ${formatDate(exam.date)}</strong></div>
         </div>
+        <div class="print-summary"><div><small>Students</small><strong>${students.length}</strong></div><div><small>Entered</small><strong>${Object.values(exam.marks).filter(v => v !== "").length}</strong></div><div><small>Highest</small><strong>${(() => { const v=Object.values(exam.marks).filter(x=>x!=="").map(Number); return v.length?Math.max(...v):"—"; })()}</strong></div><div><small>Average</small><strong>${(() => { const v=Object.values(exam.marks).filter(x=>x!=="").map(Number); return v.length?(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1):"—"; })()}</strong></div></div>
         <table class="print-table">
           <thead><tr><th>Sl. No.</th><th>Name of the Students</th><th>Marks</th></tr></thead>
           <tbody>${rows || `<tr><td colspan="3">No students</td></tr>`}</tbody>
@@ -363,6 +385,22 @@
     window.print();
   }
 
+
+  function exportBackup() {
+    const payload={app:"EZEE VISION CHAMPUA — Student Result Manager Pro",backupVersion:1,createdAt:new Date().toISOString(),data:state.db};
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=`ezee-result-backup-${todayISO()}.json`;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);toast("Backup downloaded.");
+  }
+  function importBackup(file) {
+    if(!file)return;
+    const reader=new FileReader();
+    reader.onload=()=>{try{
+      const parsed=JSON.parse(reader.result),candidate=parsed?.data||parsed,normalized=normalizeDB(candidate);
+      const students=CLASSES.reduce((n,c)=>n+normalized.classes[c].students.length,0),exams=CLASSES.reduce((n,c)=>n+normalized.classes[c].exams.length,0);
+      if(!confirm(`Restore this backup?\\n\\nStudents: ${students}\\nExams: ${exams}\\n\\nCurrent browser data will be replaced by this backup.`))return;
+      state.db=normalized;state.selectedClass="4";state.selectedExamId=null;state.search="";$("searchInput").value="";persist();renderAll();toast("Backup restored successfully.");
+    }catch(e){toast("Invalid backup file.")}};reader.readAsText(file);
+  }
   $("classDashboard").addEventListener("click", e => {
     const btn = e.target.closest("[data-class]");
     if (btn) selectClass(btn.dataset.class);
@@ -372,6 +410,7 @@
 
   $("examSelect").addEventListener("change", e => {
     state.selectedExamId = e.target.value || null;
+    renderAnalytics();
     renderTable();
     renderHistory();
     syncExamFields();
@@ -409,6 +448,24 @@
     if (del) deleteExam(del.dataset.deleteExam);
   });
 
+
+  $("backupBtn").addEventListener("click",exportBackup);
+  $("restoreBtn").addEventListener("click",()=>$('restoreInput').click());
+  $("restoreInput").addEventListener("change",e=>{importBackup(e.target.files[0]);e.target.value=""});
+  $("resultBody").addEventListener("keydown",e=>{
+    const input=e.target.closest("[data-mark-id]");
+    if(!input||e.key!=="Enter")return;
+    e.preventDefault();
+    saveMark(input.dataset.markId,input.value,input);
+    const inputs=[...document.querySelectorAll("[data-mark-id]")],i=inputs.indexOf(input);
+    if(i>=0&&inputs[i+1]){inputs[i+1].focus();inputs[i+1].select()}
+  });
+  $("editExamForm").addEventListener("submit",e=>{
+    if(e.submitter?.value==="cancel")return;e.preventDefault();
+    const id=$("editingExamId").value,exam=classData().exams.find(x=>x.id===id);
+    if(exam)updateExam(exam,$("editExamName").value,$("editExamMarks").value,$("editExamDate").value);
+    $("editExamDialog").close();
+  });
   $("studentForm").addEventListener("submit", e => {
     if (e.submitter?.value === "cancel") return;
     e.preventDefault();
@@ -448,4 +505,3 @@
 
   renderAll();
 })();
-      
