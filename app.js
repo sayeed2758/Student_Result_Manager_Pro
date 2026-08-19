@@ -428,8 +428,7 @@
     if(classData().students.some(s=>s.id!==id&&s.name.toLowerCase()===name.toLowerCase())){toast('That student name already exists in this class.');return false;}
     const s=classData().students.find(x=>x.id===id);if(!s)return false;s.name=name;persist();renderAll();toast('Student updated.');return true;
   }
-
- function openNewExamModal() {
+  function openNewExamModal() {
     openModal(`<div class="modal-head"><div><span class="eyebrow">EXAM MANAGEMENT</span><h3>Create New Exam</h3></div><button class="close-modal" type="button" data-modal-close>×</button></div>
       <form id="newExamForm" class="modal-form"><label class="field"><span>Class</span><select id="modalExamClass">${CLASSES.map(c=>`<option value="${c}" ${c===state.selectedClass?'selected':''}>Class ${c}</option>`).join('')}</select></label><label class="field"><span>Exam Name</span><input id="modalExamName" required maxlength="80" placeholder="e.g. Unit Test 1"></label><label class="field"><span>Total Marks</span><input id="modalExamMarks" type="number" min="1" step="1" inputmode="numeric" value="100" required></label><label class="field"><span>Date of Exam</span><input id="modalExamDate" type="date" value="${todayISO()}" required></label><div class="modal-actions"><button class="btn outline" type="button" data-modal-close>Cancel</button><button class="btn primary" type="submit">Create Exam</button></div></form>`,card=>{
       card.querySelector('#newExamForm').onsubmit=e=>{e.preventDefault();const ok=createExam(card.querySelector('#modalExamName').value,card.querySelector('#modalExamMarks').value,card.querySelector('#modalExamDate').value,card.querySelector('#modalExamClass').value);if(ok)closeModal();};
@@ -512,7 +511,7 @@ function exportCSV() {
     for(const c of CLASSES){const d=db.classes[c];if(!d||!Array.isArray(d.students)||!Array.isArray(d.exams))return {ok:false,error:`Class ${c} data is invalid.`};}
     return {ok:true};
   }
-  function dataHealth() {
+function dataHealth() {
     const issues=[];let students=0,exams=0,marks=0,absent=0,pending=0;
     for(const c of CLASSES){const d=state.db.classes[c];students+=d.students.length;exams+=d.exams.length;const ids=new Set(d.students.map(s=>s.id));if(ids.size!==d.students.length)issues.push(`Class ${c}: duplicate student IDs.`);for(const e of d.exams){if(!e.name||!Number.isInteger(e.totalMarks)||e.totalMarks<1)issues.push(`Class ${c}: invalid exam “${e.name||'Unnamed'}”.`);for(const s of d.students){const st=e.statuses[s.id]||'pending';if(st==='absent')absent++;else if(st==='pending')pending++;else if(st==='present'&&e.marks[s.id]!==''&&e.marks[s.id]!=null)marks++;}}}
     return {students,exams,marks,absent,pending,issues};
@@ -539,7 +538,6 @@ function exportCSV() {
     if(!state.deferredPrompt){toast('Install is not available in this browser yet. Use browser menu → Add to Home screen.');return;}
     state.deferredPrompt.prompt();await state.deferredPrompt.userChoice;state.deferredPrompt=null;$('installBtn').classList.add('hidden');toast('Install prompt completed.');
   }
-
   function bindEvents() {
     $('classGrid').addEventListener('click',e=>{const b=e.target.closest('[data-class]');if(b)selectClass(b.dataset.class);});
     $('classSelect').addEventListener('change',e=>selectClass(e.target.value));
@@ -581,4 +579,3 @@ function exportCSV() {
   bindEvents();
   renderAll();
 })();
-                                                             
