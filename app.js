@@ -261,3 +261,140 @@ function init(){
 }
 init();
 })();
+
+/* =========================================================
+   PWA INSTALL SYSTEM
+   Student Result Manager Pro
+   ========================================================= */
+
+let deferredInstallPrompt = null;
+
+window.addEventListener("beforeinstallprompt", event => {
+  event.preventDefault();
+
+  deferredInstallPrompt = event;
+
+  updateInstallButton();
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+
+  updateInstallButton();
+
+  console.log("Student Result Manager installed successfully.");
+});
+
+function updateInstallButton() {
+  const installBtn = document.getElementById("installAppBtn");
+
+  if (!installBtn) return;
+
+  const isStandalone =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true;
+
+  if (isStandalone) {
+    installBtn.textContent = "✓ App Installed";
+    installBtn.disabled = true;
+    return;
+  }
+
+  installBtn.disabled = false;
+
+  if (deferredInstallPrompt) {
+    installBtn.textContent = "Install App";
+  } else {
+    installBtn.textContent = "Install App";
+  }
+}
+
+async function installStudentResultManager() {
+  const installBtn = document.getElementById("installAppBtn");
+
+  const isStandalone =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true;
+
+  if (isStandalone) {
+    alert("Student Result Manager is already installed.");
+    return;
+  }
+
+  if (!deferredInstallPrompt) {
+    alert(
+      "Install option is not available yet.\n\n" +
+      "Please open this website directly in Google Chrome using HTTPS, " +
+      "then wait a few seconds and try Install App again.\n\n" +
+      "If Chrome still does not show the install prompt, open Chrome menu " +
+      "and check for 'Install app'."
+    );
+
+    return;
+  }
+
+  try {
+    deferredInstallPrompt.prompt();
+
+    const result = await deferredInstallPrompt.userChoice;
+
+    console.log("Install result:", result.outcome);
+
+    deferredInstallPrompt = null;
+
+    updateInstallButton();
+
+  } catch (error) {
+    console.error("PWA installation error:", error);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  const installBtn = document.getElementById("installAppBtn");
+
+  if (installBtn) {
+    installBtn.addEventListener(
+      "click",
+      installStudentResultManager
+    );
+  }
+
+  updateInstallButton();
+});
+
+
+/* =========================================================
+   SERVICE WORKER REGISTRATION
+   ========================================================= */
+
+if ("serviceWorker" in navigator) {
+
+  window.addEventListener("load", async () => {
+
+    try {
+
+      const swUrl = new URL("./sw.js", document.baseURI);
+
+      const registration =
+        await navigator.serviceWorker.register(swUrl, {
+          scope: "./"
+        });
+
+      console.log(
+        "Service Worker registered:",
+        registration.scope
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Service Worker registration failed:",
+        error
+      );
+
+    }
+
+  });
+
+}
