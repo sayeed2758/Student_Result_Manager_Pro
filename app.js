@@ -234,7 +234,7 @@
   function escapeHTML(value) {
     return String(value ?? '')
       .replace(
-        /[&<>"']/g,
+        /[&<>"]/g,
         c =>
           ({
             '&': '&amp;',
@@ -262,7 +262,8 @@
       2200
     );
   }
-    function ensureExamStudents(exam) {
+
+  function ensureExamStudents(exam) {
     if (!exam) return;
 
     classData().students.forEach(student => {
@@ -753,7 +754,7 @@
           `;
         })
         .join('');
-                      }
+  }
     function selectClass(c) {
     if (!CLASSES.includes(String(c))) return;
 
@@ -896,7 +897,7 @@
           Number(e.marks[id]);
 
         if (
-          !Number.isInteger(n) ||
+          !Number.isFinite(n) ||
           n < 0 ||
           n > total
         ) {
@@ -1131,7 +1132,8 @@
 
     toast('Exam deleted.');
   }
-    function duplicateExam(id) {
+
+  function duplicateExam(id) {
     const source =
       classData().exams.find(
         e => e.id === id
@@ -1207,7 +1209,10 @@
     }
 
     const value = Number(raw);
-const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
+    const valid =
+      Number.isFinite(value) &&
+      value >= 0 &&
+      value <= e.totalMarks;
 
     input.classList.toggle(
       'invalid',
@@ -1342,8 +1347,7 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
       `${pending.length} students marked absent.`
     );
   }
-
-  function openModal(
+    function openModal(
     html,
     afterOpen
   ) {
@@ -1488,7 +1492,8 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
       );
     });
   }
-    function openStudentProfileModal(id) {
+
+  function openStudentProfileModal(id) {
     const student =
       classData().students.find(
         s => s.id === id
@@ -1567,6 +1572,7 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
                 <b>
                   ${escapeHTML(e.name)}
                 </b>
+
                 <small>
                   ${formatDate(e.date)}
                 </small>
@@ -1950,9 +1956,10 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
               required
             >
           </label>
+                    </label>
 
           <label class="field">
-            <span>Date of Exam</span>
+            <span>Date</span>
 
             <input
               id="modalExamDate"
@@ -1981,29 +1988,31 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
         </form>
       `,
       card => {
-        card.querySelector(
-          '#newExamForm'
-        ).onsubmit = e => {
+        const form =
+          card.querySelector(
+            '#newExamForm'
+          );
+
+        form.onsubmit = e => {
           e.preventDefault();
 
-          const ok =
-            createExam(
-              card.querySelector(
-                '#modalExamName'
-              ).value,
+          const ok = createExam(
+            card.querySelector(
+              '#modalExamName'
+            ).value,
 
-              card.querySelector(
-                '#modalExamMarks'
-              ).value,
+            card.querySelector(
+              '#modalExamMarks'
+            ).value,
 
-              card.querySelector(
-                '#modalExamDate'
-              ).value,
+            card.querySelector(
+              '#modalExamDate'
+            ).value,
 
-              card.querySelector(
-                '#modalExamClass'
-              ).value
-            );
+            card.querySelector(
+              '#modalExamClass'
+            ).value
+          );
 
           if (ok) {
             closeModal();
@@ -2021,13 +2030,15 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
     );
   }
 
-  function openEditExamModal(id) {
-    const e =
+  function openEditExamModal(
+    id
+  ) {
+    const exam =
       classData().exams.find(
-        x => x.id === id
+        e => e.id === id
       );
 
-    if (!e) return;
+    if (!exam) return;
 
     openModal(
       `
@@ -2052,21 +2063,517 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
         </div>
 
         <form
-          id="editExamModalForm"
+          id="editExamForm"
+          class="modal-form"
+        >
+          <label class="field">
+            <span>Exam Name</span>
+
+            <input
+              id="editExamName"
+              required
+              maxlength="80"
+              value="${escapeHTML(
+                exam.name
+              )}"
+            >
+          </label>
+
+          <label class="field">
+            <span>Total Marks</span>
+
+            <input
+              id="editExamMarks"
+              type="number"
+              min="1"
+              step="1"
+              inputmode="numeric"
+              value="${exam.totalMarks}"
+              required
+            >
+          </label>
+
+          <label class="field">
+            <span>Date</span>
+
+            <input
+              id="editExamDate"
+              type="date"
+              value="${escapeHTML(
+                exam.date
+              )}"
+              required
+            >
+          </label>
+
+          <label class="field">
+            <span>
+              Teacher Signature
+            </span>
+
+            <select
+              id="editExamTeacher"
+            >
+              <option value="">
+                Select Teacher
+              </option>
+
+              ${TEACHERS.map(
+                teacher =>
+                  `<option
+                    value="${escapeHTML(
+                      teacher
+                    )}"
+                    ${
+                      exam.teacherSignature ===
+                      teacher
+                        ? 'selected'
+                        : ''
+                    }
+                  >
+                    ${escapeHTML(
+                      teacher
+                    )}
+                  </option>`
+              ).join('')}
+            </select>
+          </label>
+
+          <div class="modal-actions">
+            <button
+              class="btn outline"
+              type="button"
+              data-modal-close
+            >
+              Cancel
+            </button>
+
+            <button
+              class="btn primary"
+              type="submit"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+      `,
+      card => {
+        const form =
+          card.querySelector(
+            '#editExamForm'
+          );
+
+        form.onsubmit = e => {
+          e.preventDefault();
+
+          const ok = updateExam(
+            exam,
+
+            card.querySelector(
+              '#editExamName'
+            ).value,
+
+            card.querySelector(
+              '#editExamMarks'
+            ).value,
+
+            card.querySelector(
+              '#editExamDate'
+            ).value
+          );
+
+          const teacher =
+            card.querySelector(
+              '#editExamTeacher'
+            ).value;
+
+          if (ok) {
+            exam.teacherSignature =
+              TEACHERS.includes(
+                teacher
+              )
+                ? teacher
+                : '';
+
+            persist();
+            renderAll();
+            closeModal();
+
+            toast(
+              'Exam updated.'
+            );
+          }
+        };
+
+        setTimeout(
+          () =>
+            card.querySelector(
+              '#editExamName'
+            ).focus(),
+          30
+        );
+      }
+    );
+  }
+
+  function openBulkStudentModal() {
+    openModal(
+      `
+        <div class="modal-head">
+          <div>
+            <span class="eyebrow">
+              STUDENT MANAGEMENT
+            </span>
+
+            <h3>
+              Add Multiple Students
+            </h3>
+
+            <p class="profile-subtitle">
+              Enter one student name per line.
+            </p>
+          </div>
+
+          <button
+            class="close-modal"
+            type="button"
+            data-modal-close
+          >
+            ×
+          </button>
+        </div>
+
+        <form
+          id="bulkStudentForm"
           class="modal-form"
         >
           <label class="field">
             <span>
-              Exam Name
+              Student Names
             </span>
 
-            <input
-              id="modalEditExamName"
+            <textarea
+              id="bulkStudentNames"
+              rows="9"
+              maxlength="3000"
+              placeholder="Rahul Kumar
+Aman Singh
+Priya Das"
               required
-              maxlength="80"
-              value="${escapeHTML(e.name)}"
-            >
+            ></textarea>
           </label>
+
+          <div class="bulk-help">
+            Duplicate names will be skipped.
+          </div>
+
+          <div class="modal-actions">
+            <button
+              class="btn outline"
+              type="button"
+              data-modal-close
+            >
+              Cancel
+            </button>
+
+            <button
+              class="btn primary"
+              type="submit"
+            >
+              Add Students
+            </button>
+          </div>
+        </form>
+      `,
+      card => {
+        const form =
+          card.querySelector(
+            '#bulkStudentForm'
+          );
+
+        form.onsubmit = e => {
+          e.preventDefault();
+
+          const raw =
+            card.querySelector(
+              '#bulkStudentNames'
+            ).value;
+
+          const names =
+            raw
+              .split(/\r?\n/)
+              .map(
+                name =>
+                  name
+                    .trim()
+                    .replace(/\s+/g, ' ')
+              )
+              .filter(Boolean);
+
+          if (!names.length) {
+            toast(
+              'Enter at least one student name.'
+            );
+            return;
+          }
+
+          let added = 0;
+          let skipped = 0;
+
+          const d = classData();
+
+          names.forEach(name => {
+            const exists =
+              d.students.some(
+                s =>
+                  s.name.toLowerCase() ===
+                  name.toLowerCase()
+              );
+
+            if (exists) {
+              skipped++;
+              return;
+            }
+
+            const student = {
+              id: uid('student'),
+              name
+            };
+
+            d.students.push(student);
+
+            d.exams.forEach(exam => {
+              exam.marks[
+                student.id
+              ] = '';
+
+              exam.statuses[
+                student.id
+              ] = 'pending';
+            });
+
+            added++;
+          });
+
+          if (added) {
+            persist();
+            renderAll();
+          }
+
+          closeModal();
+
+          toast(
+            `${added} student${
+              added === 1 ? '' : 's'
+            } added${
+              skipped
+                ? ` · ${skipped} skipped`
+                : ''
+            }.`
+          );
+        };
+
+        setTimeout(
+          () =>
+            card.querySelector(
+              '#bulkStudentNames'
+            ).focus(),
+          30
+        );
+      }
+    );
+  }
+
+  function openImportModal() {
+    openModal(
+      `
+        <div class="modal-head">
+          <div>
+            <span class="eyebrow">
+              DATA IMPORT
+            </span>
+
+            <h3>
+              Import Students
+            </h3>
+
+            <p class="profile-subtitle">
+              Paste CSV or one-name-per-line data.
+            </p>
+          </div>
+
+          <button
+            class="close-modal"
+            type="button"
+            data-modal-close
+          >
+            ×
+          </button>
+        </div>
+
+        <form
+          id="importForm"
+          class="modal-form"
+        >
+          <label class="field">
+            <span>
+              Student Data
+            </span>
+
+            <textarea
+              id="importData"
+              rows="10"
+              placeholder="Name
+Rahul Kumar
+Aman Singh
+Priya Das"
+              required
+            ></textarea>
+          </label>
+
+          <div class="bulk-help">
+            First column is treated as the student name.
+          </div>
+
+          <div class="modal-actions">
+            <button
+              class="btn outline"
+              type="button"
+              data-modal-close
+            >
+              Cancel
+            </button>
+
+            <button
+              class="btn primary"
+              type="submit"
+            >
+              Import
+            </button>
+          </div>
+        </form>
+      `,
+      card => {
+        const form =
+          card.querySelector(
+            '#importForm'
+          );
+
+        form.onsubmit = e => {
+          e.preventDefault();
+
+          const raw =
+            card.querySelector(
+              '#importData'
+            ).value;
+
+          const lines =
+            raw
+              .split(/\r?\n/)
+              .map(
+                line => line.trim()
+              )
+              .filter(Boolean);
+
+          if (!lines.length) {
+            toast(
+              'No student data found.'
+            );
+            return;
+          }
+
+          let added = 0;
+          let skipped = 0;
+
+          const d = classData();
+
+          lines.forEach(
+            (line, index) => {
+              const columns =
+                line.split(',');
+
+              let name =
+                columns[0]
+                  ?.trim()
+                  .replace(/^["']|["']$/g, '');
+
+              if (
+                index === 0 &&
+                name?.toLowerCase() ===
+                  'name'
+              ) {
+                return;
+              }
+
+              if (!name) {
+                skipped++;
+                return;
+              }
+
+              const exists =
+                d.students.some(
+                  s =>
+                    s.name.toLowerCase() ===
+                    name.toLowerCase()
+                );
+
+              if (exists) {
+                skipped++;
+                return;
+              }
+
+              const student = {
+                id: uid('student'),
+                name
+              };
+
+              d.students.push(student);
+
+              d.exams.forEach(
+                exam => {
+                  exam.marks[
+                    student.id
+                  ] = '';
+
+                  exam.statuses[
+                    student.id
+                  ] = 'pending';
+                }
+              );
+
+              added++;
+            }
+          );
+
+          if (added) {
+            persist();
+            renderAll();
+          }
+
+          closeModal();
+
+          toast(
+            `${added} student${
+              added === 1 ? '' : 's'
+            } imported${
+              skipped
+                ? ` · ${skipped} skipped`
+                : ''
+            }.`
+          );
+        };
+
+        setTimeout(
+          () =>
+            card.querySelector(
+              '#importData'
+            ).focus(),
+          30
+        );
+      }
+    );
+  }
+            </label>
 
           <label class="field">
             <span>
@@ -2202,6 +2709,20 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
           <button
             class="tool-card"
             type="button"
+            id="toolShareBackup"
+          >
+            <strong>
+              Transfer Data
+            </strong>
+
+            <span>
+              Share a complete backup to another mobile.
+            </span>
+          </button>
+
+          <button
+            class="tool-card"
+            type="button"
             id="toolRestore"
           >
             <strong>
@@ -2288,6 +2809,13 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
         ).onclick = () => {
           exportBackup('manual');
           closeModal();
+        };
+
+        card.querySelector(
+          '#toolShareBackup'
+        ).onclick = async () => {
+          closeModal();
+          await shareBackup();
         };
 
         card.querySelector(
@@ -2454,8 +2982,9 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
         };
       }
     );
-              }
-    function printResult(exam) {
+  }
+
+  function printResult(exam) {
     if (!exam) {
       toast('Select an exam first.');
       return;
@@ -2473,68 +3002,92 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
         ? exam.teacherSignature
         : TEACHERS[0];
 
+    const s = stats(exam);
+
     const rows =
       students
-        .map((student, index) => {
-          const status =
-            exam.statuses[student.id] ||
-            'pending';
+        .map(
+          (student, index) => {
+            const status =
+              exam.statuses[
+                student.id
+              ] || 'pending';
 
-          const raw =
-            exam.marks[student.id];
+            const raw =
+              exam.marks[
+                student.id
+              ];
 
-          const absent =
-            status === 'absent';
+            const absent =
+              status === 'absent';
 
-          const marks =
-            absent || raw === ''
-              ? ''
-              : Number(raw);
+            const hasMark =
+              !absent &&
+              raw !== '' &&
+              Number.isFinite(
+                Number(raw)
+              );
 
-          const percentage =
-            !absent &&
-            raw !== '' &&
-            Number.isFinite(Number(raw))
-              ? (
-                  (Number(raw) /
-                    exam.totalMarks) *
-                  100
-                ).toFixed(1) + '%'
-              : absent
-                ? 'ABSENT'
-                : '—';
+            const mark =
+              hasMark
+                ? Number(raw)
+                : null;
 
-          return `
-            <tr>
-              <td>${index + 1}</td>
+            const percentage =
+              hasMark
+                ? (
+                    (mark /
+                      exam.totalMarks) *
+                    100
+                  ).toFixed(1) + '%'
+                : absent
+                  ? 'ABSENT'
+                  : '—';
 
-              <td>
-                ${escapeHTML(student.name)}
-              </td>
+            return `
+              <tr>
+                <td>
+                  ${index + 1}
+                </td>
 
-              <td class="${
-                absent
-                  ? 'print-absent'
-                  : ''
-              }">
-                ${
-                  absent
-                    ? 'ABSENT'
-                    : marks === ''
-                      ? '—'
-                      : marks
-                }
-              </td>
+                <td>
+                  ${escapeHTML(
+                    student.name
+                  )}
+                </td>
 
-              <td>
-                ${percentage}
-              </td>
-            </tr>
-          `;
-        })
+                <td
+                  class="${
+                    absent
+                      ? 'print-absent'
+                      : ''
+                  }"
+                >
+                  ${
+                    absent
+                      ? 'ABSENT'
+                      : hasMark
+                        ? escapeHTML(
+                            mark
+                          )
+                        : '—'
+                  }
+                </td>
+
+                <td
+                  class="${
+                    absent
+                      ? 'print-absent'
+                      : ''
+                  }"
+                >
+                  ${percentage}
+                </td>
+              </tr>
+            `;
+          }
+        )
         .join('');
-
-    const s = stats(exam);
 
     const win =
       window.open(
@@ -2550,302 +3103,609 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
       return;
     }
 
+    win.document.open();
+
     win.document.write(`
-      <!doctype html>
-      <html>
-      <head>
-        <meta charset="utf-8">
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1"
+>
+<title>
+  ${escapeHTML(exam.name)}
+  —
+  Class ${escapeHTML(
+    state.selectedClass
+  )}
+</title>
 
-        <title>
-          ${escapeHTML(exam.name)}
-          - Class ${state.selectedClass}
-        </title>
+<style>
+  *{
+    box-sizing:border-box
+  }
 
-        <style>
-          * {
-            box-sizing: border-box;
-          }
+  html,body{
+    margin:0;
+    padding:0;
+    background:#fff;
+    color:#111
+  }
 
-          body {
-            margin: 0;
-            padding: 24px;
-            font-family:
-              Arial,
-              Helvetica,
-              sans-serif;
-            color: #111;
-            background: #fff;
-          }
+  body{
+    font-family:
+      Arial,
+      Helvetica,
+      sans-serif;
+    padding:18px
+  }
 
-          .report {
-            max-width: 1000px;
-            margin: 0 auto;
-          }
+  .report{
+    max-width:960px;
+    margin:0 auto
+  }
 
-          .header {
-            text-align: center;
-            border-bottom: 2px solid #111;
-            padding-bottom: 14px;
-            margin-bottom: 18px;
-          }
+  .header{
+    text-align:center;
+    border-bottom:
+      2px solid #0e446e;
+    padding-bottom:10px;
+    margin-bottom:12px
+  }
 
-          .header h1 {
-            margin: 0 0 6px;
-            font-size: 25px;
-          }
+  .header img{
+    width:58px;
+    height:58px;
+    object-fit:contain;
+    display:block;
+    margin:0 auto 5px
+  }
 
-          .header h2 {
-            margin: 0;
-            font-size: 18px;
-            font-weight: 600;
-          }
+  .header h1{
+    margin:0;
+    font-size:22px;
+    letter-spacing:.2px
+  }
 
-          .meta {
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
-            margin: 12px 0 20px;
-            font-size: 13px;
-          }
+  .header h2{
+    margin:4px 0 0;
+    font-size:14px;
+    font-weight:600;
+    color:#333
+  }
 
-          .summary {
-            display: grid;
-            grid-template-columns:
-              repeat(4, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-          }
+  .heading{
+    margin:8px 0 11px;
+    text-align:center;
+    font-size:14px;
+    font-weight:800;
+    letter-spacing:1px;
+    color:#0e446e
+  }
 
-          .summary-box {
-            border: 1px solid #bbb;
-            padding: 10px;
-            text-align: center;
-          }
+  .meta{
+    display:grid;
+    grid-template-columns:
+      1fr 1fr 1fr;
+    border:1px solid #999;
+    margin-bottom:10px
+  }
 
-          .summary-box small {
-            display: block;
-            font-size: 10px;
-            text-transform: uppercase;
-            margin-bottom: 4px;
-          }
+  .meta>div{
+    padding:7px 8px;
+    border-right:1px solid #999;
+    font-size:10px
+  }
 
-          .summary-box strong {
-            font-size: 18px;
-          }
+  .meta>div:last-child{
+    border-right:0
+  }
 
-          table {
-            width: 100%;
-            border-collapse: collapse;
-          }
+  .meta small{
+    display:block;
+    font-size:7px;
+    color:#666;
+    text-transform:uppercase;
+    margin-bottom:3px
+  }
 
-          th,
-          td {
-            border: 1px solid #999;
-            padding: 8px 9px;
-            font-size: 12px;
-          }
+  .meta strong{
+    font-size:10px
+  }
 
-          th {
-            background: #eee;
-            font-weight: 700;
-          }
+  .summary{
+    display:grid;
+    grid-template-columns:
+      repeat(4,1fr);
+    border:1px solid #999;
+    margin-bottom:11px
+  }
 
-          .print-absent {
-            font-weight: 700;
-          }
+  .summary-box{
+    padding:7px;
+    text-align:center;
+    border-right:1px solid #999
+  }
 
-          .signature-area {
-            margin-top: 55px;
-            display: flex;
-            justify-content: flex-end;
-          }
+  .summary-box:last-child{
+    border-right:0
+  }
 
-          .signature {
-            width: 230px;
-            text-align: center;
-          }
+  .summary-box small{
+    display:block;
+    font-size:7px;
+    color:#666;
+    text-transform:uppercase;
+    margin-bottom:3px
+  }
 
-          .signature-line {
-            border-top: 1px solid #111;
-            margin-top: 45px;
-            padding-top: 7px;
-            font-weight: 700;
-          }
+  .summary-box strong{
+    font-size:13px
+  }
 
-          .signature small {
-            display: block;
-            margin-top: 4px;
-          }
+  .completion{
+    text-align:right;
+    font-size:7.5px;
+    color:#666;
+    margin:-3px 0 7px
+  }
 
-          .footer {
-            margin-top: 25px;
-            text-align: center;
-            font-size: 10px;
-            color: #555;
-          }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    table-layout:fixed
+  }
 
-          @media print {
-            body {
-              padding: 0;
-            }
+  th,td{
+    border:1px solid #777;
+    padding:6px 7px;
+    font-size:9.5px;
+    vertical-align:middle
+  }
 
-            .report {
-              max-width: none;
-            }
+  th{
+    background:#eef3f7;
+    font-weight:800
+  }
 
-            @page {
-              size: A4 portrait;
-              margin: 12mm;
-            }
-          }
-        </style>
-      </head>
+  th:first-child,
+  td:first-child{
+    width:45px;
+    text-align:center
+  }
 
-      <body>
-        <div class="report">
+  th:nth-child(2),
+  td:nth-child(2){
+    width:auto
+  }
 
-          <div class="header">
-            <h1>
-              EZEE VISION CHAMPUA
-            </h1>
+  th:nth-child(3),
+  td:nth-child(3){
+    width:75px;
+    text-align:center
+  }
 
-            <h2>
-              ${escapeHTML(exam.name)}
-            </h2>
-          </div>
+  th:nth-child(4),
+  td:nth-child(4){
+    width:85px;
+    text-align:center
+  }
 
-          <div class="meta">
-            <div>
-              <strong>
-                Class:
-              </strong>
-              ${escapeHTML(
-                state.selectedClass
-              )}
-            </div>
+  .print-absent{
+    font-weight:800
+  }
 
-            <div>
-              <strong>
-                Date:
-              </strong>
-              ${formatDate(exam.date)}
-            </div>
+  .note{
+    font-size:7.5px;
+    color:#666;
+    margin-top:7px
+  }
 
-            <div>
-              <strong>
-                Total Marks:
-              </strong>
-              ${exam.totalMarks}
-            </div>
-          </div>
+  .signature-area{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:16px;
+    page-break-inside:avoid
+  }
 
-          <div class="summary">
+  .signature-box{
+    width:205px;
+    border:1px solid #444;
+    padding:9px 12px 7px;
+    text-align:center;
+    background:#fff
+  }
 
-            <div class="summary-box">
-              <small>
-                Students
-              </small>
+  .signature-name{
+    font-family:
+      "Segoe Script",
+      "Brush Script MT",
+      "URW Chancery L",
+      cursive;
+    font-size:18px;
+    font-style:italic;
+    font-weight:600;
+    line-height:1.05;
+    margin:0 0 3px;
+    color:#111
+  }
 
-              <strong>
-                ${s.total}
-              </strong>
-            </div>
+  .signature-line{
+    border-top:1px solid #222;
+    width:100%;
+    margin:0 0 3px
+  }
 
-            <div class="summary-box">
-              <small>
-                Present
-              </small>
+  .signature-label{
+    font-size:7.5px;
+    color:#555;
+    margin:0
+  }
 
-              <strong>
-                ${s.present}
-              </strong>
-            </div>
+  .footer{
+    display:flex;
+    justify-content:space-between;
+    border-top:1px solid #bbb;
+    padding-top:7px;
+    margin-top:12px;
+    font-size:7.5px;
+    color:#666
+  }
 
-            <div class="summary-box">
-              <small>
-                Absent
-              </small>
+  @media(max-width:600px){
+    body{
+      padding:8px
+    }
 
-              <strong>
-                ${s.absent}
-              </strong>
-            </div>
+    .meta{
+      grid-template-columns:1fr
+    }
 
-            <div class="summary-box">
-              <small>
-                Average
-              </small>
+    .meta>div{
+      border-right:0;
+      border-bottom:1px solid #999
+    }
 
-              <strong>
-                ${
-                  s.present
-                    ? s.average.toFixed(1)
-                    : '—'
-                }
-              </strong>
-            </div>
+    .meta>div:last-child{
+      border-bottom:0
+    }
 
-          </div>
+    .summary{
+      grid-template-columns:
+        repeat(2,1fr)
+    }
 
-          <table>
-            <thead>
-              <tr>
-                <th>
-                  #
-                </th>
+    .summary-box:nth-child(2){
+      border-right:0
+    }
 
-                <th>
-                  Student Name
-                </th>
+    .summary-box:nth-child(-n+2){
+      border-bottom:1px solid #999
+    }
 
-                <th>
-                  Marks
-                </th>
+    .signature-area{
+      margin-top:12px
+    }
 
-                <th>
-                  Percentage
-                </th>
-              </tr>
-            </thead>
+    .signature-box{
+      width:190px
+    }
+  }
 
-            <tbody>
-              ${rows}
-            </tbody>
-          </table>
+  @media print{
+    body{
+      padding:0
+    }
 
-          <div class="signature-box">
-  <strong>${escapeHTML(teacher||'Teacher')}</strong>
-  <div class="signature-line"></div>
-  <small>Teacher’s Signature</small>
-          </div>
-          </div>
+    .report{
+      max-width:none
+    }
 
-          <div class="footer">
-            Generated from
-            EZEE VISION CHAMPUA
-          </div>
+    @page{
+      size:A4 portrait;
+      margin:10mm
+    }
+  }
+</style>
+</head>
 
-        </div>
+<body>
 
-        <script>
-          window.onload = function () {
-            setTimeout(
-              function () {
-                window.print();
-              },
-              250
-            );
-          };
-        <\/script>
+<div class="report">
 
-      </body>
-      </html>
-    `);
+  <div class="header">
+    <img
+      src="assets/logo.png"
+      alt="EZEE VISION CHAMPUA"
+    >
+
+    <h1>
+      EZEE VISION CHAMPUA
+    </h1>
+
+    <h2>
+      STUDENT RESULT MANAGER PRO
+    </h2>
+  </div>
+
+  <div class="heading">
+    EXAM RESULT SHEET
+  </div>
+
+  <div class="meta">
+    <div>
+      <small>Exam</small>
+      <strong>
+        ${escapeHTML(exam.name)}
+      </strong>
+    </div>
+
+    <div>
+      <small>Class</small>
+      <strong>
+        Class ${escapeHTML(
+          state.selectedClass
+        )}
+      </strong>
+    </div>
+
+    <div>
+      <small>Date of Exam</small>
+      <strong>
+        ${escapeHTML(
+          formatDate(exam.date)
+        )}
+      </strong>
+    </div>
+  </div>
+
+  <div class="summary">
+    <div class="summary-box">
+      <small>Students</small>
+      <strong>${s.total}</strong>
+    </div>
+
+    <div class="summary-box">
+      <small>Present</small>
+      <strong>${s.present}</strong>
+    </div>
+
+    <div class="summary-box">
+      <small>Absent</small>
+      <strong>${s.absent}</strong>
+    </div>
+
+    <div class="summary-box">
+      <small>Total Marks</small>
+      <strong>
+        ${exam.totalMarks}
+      </strong>
+    </div>
+  </div>
+
+  <div class="completion">
+    Result Entry Completion:
+    <b>
+      ${
+        s.total
+          ? Math.round(
+              (
+                (s.present +
+                  s.absent) /
+                s.total
+              ) * 100
+            )
+          : 0
+      }%
+    </b>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Sl. No.</th>
+        <th>Name of the Students</th>
+        <th>Marks</th>
+        <th>Percentage</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      ${
+        rows ||
+        '<tr><td colspan="4">No students</td></tr>'
+      }
+    </tbody>
+  </table>
+
+  <div class="note">
+    ABSENT = Student was absent in this examination.
+    Pending entries are left blank.
+  </div>
+
+  <div class="signature-area">
+    <div class="signature-box">
+
+      <div class="signature-name">
+        ${escapeHTML(teacher)}
+      </div>
+
+      <div class="signature-line"></div>
+
+      <div class="signature-label">
+        Teacher’s Signature
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>
+      EZEE VISION CHAMPUA ·
+      Class ${escapeHTML(
+        state.selectedClass
+      )}
+    </span>
+
+    <span>
+      Generated
+      ${escapeHTML(
+        formatDate(todayISO())
+      )}
+    </span>
+  </div>
+
+</div>
+
+<script>
+  window.addEventListener(
+    'load',
+    () =>
+      setTimeout(
+        () => window.print(),
+        250
+      )
+  );
+<\/script>
+
+</body>
+</html>
+`);
 
     win.document.close();
   }
 
+  function exportCSV() {
+    const e = currentExam();
 
+    if (!e) {
+      toast(
+        'Select an exam first.'
+      );
+      return;
+    }
+
+    ensureExamStudents(e);
+
+    const rows = [
+      [
+        'Roll No.',
+        'Student Name',
+        'Status',
+        'Marks',
+        'Total Marks',
+        'Percentage'
+      ]
+    ];
+
+    classData().students.forEach(
+      (student, index) => {
+        const status =
+          e.statuses[
+            student.id
+          ] || 'pending';
+
+        const raw =
+          e.marks[
+            student.id
+          ];
+
+        const marks =
+          status === 'absent'
+            ? ''
+            : raw;
+
+        const percentage =
+          status === 'absent' ||
+          raw === ''
+            ? ''
+            : (
+                (Number(raw) /
+                  e.totalMarks) *
+                100
+              ).toFixed(1);
+
+        rows.push([
+          index + 1,
+          student.name,
+          status,
+          marks,
+          e.totalMarks,
+          percentage
+        ]);
+      }
+    );
+
+    const csv =
+      rows
+        .map(
+          row =>
+            row
+              .map(value => {
+                const text =
+                  String(
+                    value ?? ''
+                  );
+
+                return `"${text.replace(
+                  /"/g,
+                  '""'
+                )}"`;
+              })
+              .join(',')
+        )
+        .join('\r\n');
+
+    const blob =
+      new Blob(
+        [csv],
+        {
+          type:
+            'text/csv;charset=utf-8;'
+        }
+      );
+
+    const url =
+      URL.createObjectURL(blob);
+
+    const a =
+      document.createElement('a');
+
+    a.href = url;
+
+    a.download =
+        `ezee-result-backup-${
+          new Date()
+            .toISOString()
+            .slice(0, 10)
+        }.json`;
+
+      document.body.appendChild(a);
+
+      a.click();
+
+      a.remove();
+
+      URL.revokeObjectURL(url);
+
+      toast(
+        source === 'auto'
+          ? 'Safety backup created.'
+          : 'Backup downloaded successfully.'
+      );
+    } catch (err) {
+      console.error(
+        'Backup export failed:',
+        err
+      );
+
+      toast(
+        'Could not create backup.'
+      );
+    }
+}
   function exportCSV() {
     const e = currentExam();
 
@@ -2943,7 +3803,10 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
 
     a.download =
       `${state.selectedClass}_${e.name
-        .replace(/[^\w\-]+/g, '_')}.csv`;
+        .replace(
+          /[^\w\-]+/g,
+          '_'
+        )}.csv`;
 
     document.body.appendChild(a);
 
@@ -2958,7 +3821,6 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
     );
   }
 
-
   function exportBackup(
     source = 'manual'
   ) {
@@ -2966,9 +3828,12 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
       const backup = {
         app:
           'EZEE VISION CHAMPUA',
+
         version: 1,
+
         exportedAt:
           new Date().toISOString(),
+
         data: state.db
       };
 
@@ -3010,21 +3875,100 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
 
       URL.revokeObjectURL(url);
 
-      if (source === 'manual') {
-        toast(
-          'Backup downloaded.'
-        );
-      }
-
+      toast(
+        source === 'auto'
+          ? 'Safety backup created.'
+          : 'Backup downloaded successfully.'
+      );
     } catch (err) {
-      console.error(err);
+      console.error(
+        'Backup export failed:',
+        err
+      );
 
       toast(
-        'Backup failed.'
+        'Could not create backup.'
       );
     }
   }
 
+  async function shareBackup() {
+    try {
+      const backup = {
+        app:
+          'EZEE VISION CHAMPUA',
+
+        version: 1,
+
+        exportedAt:
+          new Date().toISOString(),
+
+        data: state.db
+      };
+
+      const file =
+        new File(
+          [
+            JSON.stringify(
+              backup,
+              null,
+              2
+            )
+          ],
+          'ezee-result-backup.json',
+          {
+            type:
+              'application/json'
+          }
+        );
+
+      if (
+        navigator.share &&
+        navigator.canShare &&
+        navigator.canShare({
+          files: [file]
+        })
+      ) {
+        await navigator.share({
+          title:
+            'EZEE VISION CHAMPUA Backup',
+
+          text:
+            'Result Manager data backup.',
+
+          files: [file]
+        });
+
+        toast(
+          'Backup shared successfully.'
+        );
+
+        return;
+      }
+
+      exportBackup('manual');
+
+      toast(
+        'Sharing is not supported here. Backup downloaded instead.'
+      );
+    } catch (err) {
+      if (
+        err?.name ===
+        'AbortError'
+      ) {
+        return;
+      }
+
+      console.error(
+        'Backup sharing failed:',
+        err
+      );
+
+      toast(
+        'Could not share backup.'
+      );
+    }
+  }
 
   async function restoreBackup(
     file
@@ -3038,145 +3982,103 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
       const parsed =
         JSON.parse(text);
 
-      const incoming =
-        parsed?.data || parsed;
-
-      const normalized =
-        normalizeDB(incoming);
-
       if (
-        !normalized.classes ||
-        typeof normalized.classes !==
-          'object'
+        !parsed ||
+        typeof parsed !== 'object' ||
+        !parsed.data ||
+        typeof parsed.data !== 'object'
       ) {
         throw new Error(
-          'Invalid backup.'
+          'Invalid backup structure.'
         );
       }
+
+      const cleaned =
+        normalizeDB(
+          parsed.data
+        );
+
+      const classes =
+        Object.values(
+          cleaned.classes || {}
+        );
+
+      const studentCount =
+        classes.reduce(
+          (sum, cls) =>
+            sum +
+            (
+              Array.isArray(
+                cls.students
+              )
+                ? cls.students.length
+                : 0
+            ),
+          0
+        );
+
+      const examCount =
+        classes.reduce(
+          (sum, cls) =>
+            sum +
+            (
+              Array.isArray(
+                cls.exams
+              )
+                ? cls.exams.length
+                : 0
+            ),
+          0
+        );
 
       const ok =
         await confirmAction(
           'Restore backup?',
-          'Current data will be replaced by the selected backup. A safety backup will be downloaded first.',
+          `This backup contains ${studentCount} students and ${examCount} exams. Your current data will be replaced. A safety backup will be downloaded first.`,
           'Restore',
           true
         );
 
-      if (!ok) {
-        $('restoreFile').value = '';
-        return;
-      }
+      if (!ok) return;
 
-      exportBackup(
-        'safety'
-      );
+      exportBackup('auto');
 
-      state.db =
-        normalized;
+      state.db = cleaned;
 
       state.selectedClass =
-        '4';
+        CLASSES.includes(
+          state.selectedClass
+        )
+          ? state.selectedClass
+          : CLASSES[0];
 
       state.selectedExamId =
-        state.db.classes['4']
-          .exams[0]?.id || null;
+        classData().exams[0]?.id ||
+        null;
 
       state.search = '';
 
-      $('searchInput').value =
-        '';
-
       persist();
-
       renderAll();
 
       toast(
         'Backup restored successfully.'
       );
-
     } catch (err) {
-      console.error(err);
-
-      toast(
-        'Could not restore this backup file.'
+      console.error(
+        'Restore failed:',
+        err
       );
 
-    } finally {
-      $('restoreFile').value = '';
+      toast(
+        'Invalid or unreadable backup file.'
+      );
     }
   }
 
-
   function openDataHealthModal() {
-    const report = [];
-
-    let totalStudents = 0;
-    let totalExams = 0;
-    let totalMarks = 0;
-    let invalidMarks = 0;
-
-    CLASSES.forEach(c => {
-      const d =
-        state.db.classes[c];
-
-      totalStudents +=
-        d.students.length;
-
-      totalExams +=
-        d.exams.length;
-
-      d.exams.forEach(e => {
-        totalMarks +=
-          Object.values(
-            e.marks || {}
-          ).filter(
-            value =>
-              value !== ''
-          ).length;
-
-        d.students.forEach(s => {
-          const raw =
-            e.marks[s.id];
-
-          if (
-            raw !== '' &&
-            (
-              !Number.isInteger(
-                Number(raw)
-              ) ||
-              Number(raw) < 0 ||
-              Number(raw) >
-                e.totalMarks
-            )
-          ) {
-            invalidMarks++;
-          }
-        });
-      });
-    });
-
-    report.push(
-      `Classes configured: ${CLASSES.length}`
-    );
-
-    report.push(
-      `Students stored: ${totalStudents}`
-    );
-
-    report.push(
-      `Exams stored: ${totalExams}`
-    );
-
-    report.push(
-      `Marks entered: ${totalMarks}`
-    );
-
-    report.push(
-      `Invalid marks found: ${invalidMarks}`
-    );
-
-    const healthy =
-      invalidMarks === 0;
+    const health =
+      getDataHealth();
 
     openModal(
       `
@@ -3187,11 +4089,7 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
             </span>
 
             <h3>
-              ${
-                healthy
-                  ? 'Everything looks healthy'
-                  : 'Attention required'
-              }
+              Storage & Integrity
             </h3>
           </div>
 
@@ -3204,136 +4102,208 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
           </button>
         </div>
 
-        <div class="health-list">
-          ${report
-            .map(
-              item =>
-                `
-                  <div>
-                    <span>
-                      ${escapeHTML(item)}
-                    </span>
-                  </div>
-                `
-            )
-            .join('')}
+        <div class="health-grid">
+          <div class="health-card">
+            <small>CLASSES</small>
+            <strong>
+              ${health.classes}
+            </strong>
+          </div>
+
+          <div class="health-card">
+            <small>STUDENTS</small>
+            <strong>
+              ${health.students}
+            </strong>
+          </div>
+
+          <div class="health-card">
+            <small>EXAMS</small>
+            <strong>
+              ${health.exams}
+            </strong>
+          </div>
+
+          <div class="health-card">
+            <small>MARKS</small>
+            <strong>
+              ${health.marks}
+            </strong>
+          </div>
+
+          <div class="health-card">
+            <small>STORAGE</small>
+            <strong>
+              ${health.storage}
+            </strong>
+          </div>
+
+          <div class="health-card">
+            <small>STATUS</small>
+            <strong>
+              ${health.valid ? 'Healthy' : 'Needs Review'}
+            </strong>
+          </div>
         </div>
 
-        <div class="modal-actions">
-          <button
-            class="btn outline"
-            type="button"
-            data-modal-close
-          >
-            Close
-          </button>
+        <div class="health-note">
+          ${
+            health.valid
+              ? 'Your local result data structure is valid.'
+              : 'Some records need attention. Consider creating a backup before making changes.'
+          }
         </div>
       `
     );
   }
 
+  function getDataHealth() {
+    let students = 0;
+    let exams = 0;
+    let marks = 0;
+    let valid = true;
 
+    Object.values(
+      state.db.classes || {}
+    ).forEach(cls => {
+      if (
+        !Array.isArray(
+          cls.students
+        ) ||
+        !Array.isArray(
+          cls.exams
+        )
+      ) {
+        valid = false;
+        return;
+      }
+
+      students +=
+        cls.students.length;
+
+      exams +=
+        cls.exams.length;
+
+      cls.exams.forEach(
+        exam => {
+          if (
+            !exam ||
+            !exam.id ||
+            !exam.name
+          ) {
+            valid = false;
+            return;
+          }
+
+          ensureExamStudents(exam);
+
+          Object.values(
+            exam.marks || {}
+          ).forEach(value => {
+            if (
+              value !== '' &&
+              Number.isFinite(
+                Number(value)
+              )
+            ) {
+              marks++;
+            }
+          });
+        }
+      );
+    });
+
+    let storage = '0 KB';
+
+    try {
+      const raw =
+        localStorage.getItem(
+          STORAGE_KEY
+        ) || '';
+
+      const kb =
+        new Blob([raw]).size /
+        1024;
+
+      storage =
+        kb < 1024
+          ? `${kb.toFixed(1)} KB`
+          : `${(
+              kb / 1024
+            ).toFixed(2)} MB`;
+    } catch (_) {}
+
+    return {
+      classes:
+        Object.keys(
+          state.db.classes || {}
+        ).length,
+
+      students,
+
+      exams,
+
+      marks,
+
+      storage,
+
+      valid
+    };
+  }
   function openResultIntelligenceModal() {
-    const exams =
-      classData().exams;
+    const e = currentExam();
 
-    const students =
-      classData().students;
-
-    if (!exams.length) {
-      openModal(`
-        <div class="modal-head">
-          <div>
-            <span class="eyebrow">
-              RESULT INTELLIGENCE
-            </span>
-
-            <h3>
-              No data yet
-            </h3>
-          </div>
-
-          <button
-            class="close-modal"
-            type="button"
-            data-modal-close
-          >
-            ×
-          </button>
-        </div>
-
-        <div class="empty">
-          <p>
-            Create an exam and enter marks
-            to see performance insights.
-          </p>
-        </div>
-      `);
-
+    if (!e) {
+      toast(
+        'Create or select an exam first.'
+      );
       return;
     }
 
-    let bestStudent = null;
-    let bestAverage = -1;
+    const s = stats(e);
 
-    students.forEach(student => {
-      let sum = 0;
-      let count = 0;
+    const topStudents =
+      classData().students
+        .map(student => {
+          const status =
+            e.statuses[
+              student.id
+            ] || 'pending';
 
-      exams.forEach(e => {
-        ensureExamStudents(e);
-
-        if (
-          e.statuses[student.id] ===
-            'present' &&
-          e.marks[student.id] !== ''
-        ) {
-          const pct =
-            (
-              Number(
-                e.marks[student.id]
-              ) /
-              e.totalMarks
-            ) * 100;
+          const raw =
+            e.marks[
+              student.id
+            ];
 
           if (
-            Number.isFinite(pct)
+            status !== 'present' ||
+            raw === ''
           ) {
-            sum += pct;
-            count++;
+            return null;
           }
-        }
-      });
 
-      if (count) {
-        const avg =
-          sum / count;
+          const pct =
+            e.totalMarks
+              ? (
+                  Number(raw) /
+                  e.totalMarks
+                ) * 100
+              : 0;
 
-        if (
-          avg > bestAverage
-        ) {
-          bestAverage = avg;
-
-          bestStudent = {
-            name: student.name,
-            average: avg
+          return {
+            name:
+              student.name,
+            marks:
+              Number(raw),
+            pct
           };
-        }
-      }
-    });
-
-    const examInsights =
-      exams.map(e => {
-        const s = stats(e);
-
-        return {
-          name: e.name,
-          average: s.average,
-          present: s.present,
-          absent: s.absent,
-          pending: s.pending
-        };
-      });
+        })
+        .filter(Boolean)
+        .sort(
+          (a, b) =>
+            b.pct - a.pct
+        )
+        .slice(0, 5);
 
     openModal(
       `
@@ -3344,8 +4314,7 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
             </span>
 
             <h3>
-              Class ${state.selectedClass}
-              Performance
+              ${escapeHTML(e.name)}
             </h3>
           </div>
 
@@ -3359,422 +4328,232 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
         </div>
 
         <div class="insight-grid">
-
-          <div class="insight-card">
-            <small>
-              TOP STUDENT
-            </small>
-
+          <div>
+            <small>AVERAGE</small>
             <strong>
-              ${
-                bestStudent
-                  ? escapeHTML(
-                      bestStudent.name
+              ${s.average}%
+            </strong>
+          </div>
+
+          <div>
+            <small>HIGHEST</small>
+            <strong>
+              ${s.highest}%
+            </strong>
+          </div>
+
+          <div>
+            <small>LOWEST</small>
+            <strong>
+              ${s.lowest}%
+            </strong>
+          </div>
+
+          <div>
+            <small>PRESENT</small>
+            <strong>
+              ${s.present}
+            </strong>
+          </div>
+        </div>
+
+        <div class="insight-section">
+          <h4>
+            Top Performers
+          </h4>
+
+          ${
+            topStudents.length
+              ? `
+                <ol class="top-students">
+                  ${topStudents
+                    .map(
+                      student =>
+                        `
+                          <li>
+                            <span>
+                              ${escapeHTML(
+                                student.name
+                              )}
+                            </span>
+
+                            <b>
+                              ${student.marks}
+                              /
+                              ${e.totalMarks}
+                              ·
+                              ${student.pct.toFixed(1)}%
+                            </b>
+                          </li>
+                        `
                     )
-                  : '—'
-              }
-            </strong>
-
-            <span>
-              ${
-                bestStudent
-                  ? bestStudent.average
-                      .toFixed(1) +
-                    '% average'
-                  : 'No marks yet'
-              }
-            </span>
-          </div>
-
-          <div class="insight-card">
-            <small>
-              TOTAL STUDENTS
-            </small>
-
-            <strong>
-              ${students.length}
-            </strong>
-
-            <span>
-              Class ${state.selectedClass}
-            </span>
-          </div>
-
-          <div class="insight-card">
-            <small>
-              TOTAL EXAMS
-            </small>
-
-            <strong>
-              ${exams.length}
-            </strong>
-
-            <span>
-              Saved examinations
-            </span>
-          </div>
-
-        </div>
-
-        <div class="insight-list">
-          ${examInsights
-            .map(
-              x =>
-                `
-                  <div class="insight-row">
-
-                    <div>
-                      <strong>
-                        ${escapeHTML(
-                          x.name
-                        )}
-                      </strong>
-
-                      <small>
-                        Present:
-                        ${x.present}
-                        · Absent:
-                        ${x.absent}
-                        · Pending:
-                        ${x.pending}
-                      </small>
-                    </div>
-
-                    <b>
-                      ${
-                        x.present
-                          ? x.average.toFixed(
-                              1
-                            ) + '%'
-                          : '—'
-                      }
-                    </b>
-
-                  </div>
-                `
-            )
-            .join('')}
-        </div>
-
-        <div class="modal-actions">
-          <button
-            class="btn outline"
-            type="button"
-            data-modal-close
-          >
-            Close
-          </button>
+                    .join('')}
+                </ol>
+              `
+              : `
+                <div class="empty">
+                  No completed marks yet.
+                </div>
+              `
+          }
         </div>
       `
     );
   }
 
-
-  async function installApp() {
+  function installApp() {
     if (
-      !state.deferredPrompt
+      state.deferredInstallPrompt
     ) {
-      toast(
-        'Install prompt is not available yet.'
-      );
+      state.deferredInstallPrompt
+        .prompt();
+
+      state.deferredInstallPrompt
+        .userChoice
+        .then(choice => {
+          if (
+            choice.outcome ===
+            'accepted'
+          ) {
+            toast(
+              'App installation started.'
+            );
+          }
+
+          state.deferredInstallPrompt =
+            null;
+        });
 
       return;
     }
 
-    state.deferredPrompt.prompt();
-
-    try {
-      await state.deferredPrompt.userChoice;
-    } catch (_) {}
-
-    state.deferredPrompt = null;
+    toast(
+      'Install prompt is not available. Use your browser menu and choose “Install app” or “Add to Home screen”.'
+    );
   }
 
   function bindEvents() {
-
-    $('classGrid').addEventListener(
-      'click',
-      event => {
-        const button =
-          event.target.closest(
-            '[data-class]'
-          );
-
-        if (!button) return;
-
-        selectClass(
-          button.dataset.class
-        );
-      }
-    );
-
-
-    $('classSelect').addEventListener(
-      'change',
-      event => {
-        selectClass(
-          event.target.value
-        );
-      }
-    );
-
-
-    $('examSelect').addEventListener(
-      'change',
-      event => {
-        state.selectedExamId =
-          event.target.value || null;
-
-        renderAll();
-      }
-    );
-
-
-    $('searchInput').addEventListener(
-      'input',
-      event => {
-        state.search =
-          event.target.value;
-
-        renderTable();
-      }
-    );
-
-
-    $('resultBody').addEventListener(
-      'click',
-      async event => {
-
-        const profile =
-          event.target.closest(
-            '[data-profile-id]'
-          );
-
-        if (profile) {
-          openStudentProfileModal(
-            profile.dataset.profileId
-          );
-
-          return;
-        }
-
-
-        const edit =
-          event.target.closest(
-            '.edit-student'
-          );
-
-        if (edit) {
-          openStudentModal(
-            edit.dataset.id
-          );
-
-          return;
-        }
-
-
-        const del =
-          event.target.closest(
-            '.delete-student'
-          );
-
-        if (del) {
-          await deleteStudent(
-            del.dataset.id
-          );
-
-          return;
-        }
-
-
-        const absent =
-          event.target.closest(
-            '[data-status-id]'
-          );
-
-        if (absent) {
-          await toggleAbsent(
-            absent.dataset.statusId
-          );
-        }
-      }
-    );
-
-
-    $('resultBody').addEventListener(
-      'change',
-      event => {
-        const input =
-          event.target.closest(
-            '[data-mark-id]'
-          );
-
-        if (!input) return;
-
-        saveMark(
-          input.dataset.markId,
-          input.value,
-          input
-        );
-      }
-    );
-
-
-    $('resultBody').addEventListener(
-      'keydown',
-      event => {
-        if (
-          event.key !== 'Enter'
-        ) {
-          return;
-        }
-
-        const input =
-          event.target.closest(
-            '[data-mark-id]'
-          );
-
-        if (!input) return;
-
-        event.preventDefault();
-
-        input.blur();
-      }
-    );
-
-
-    $('addStudentBtn').onclick =
-      () =>
-        openStudentModal();
-
-
-    $('newExamBtn').onclick =
-      () =>
-        openNewExamModal();
-
-
-    $('saveExamBtn').onclick =
-      () =>
-        saveCurrentExam();
-
-
-    $('markPendingAbsentBtn').onclick =
-      () =>
-        markAllPendingAbsent();
-
-
-    $('printBtn').onclick =
-      () =>
-        openPrintOptionsModal();
-
-
-    $('exportCsvBtn').onclick =
-      () =>
-        exportCSV();
-
-
-    $('toolsBtn').onclick =
-      () =>
-        openToolsModal();
-
-
-    $('historyNewExam')
+    $('classTabs')
       ?.addEventListener(
         'click',
-        openNewExamModal
+        e => {
+          const button =
+            e.target.closest(
+              '[data-class]'
+            );
+
+          if (!button) return;
+
+          selectClass(
+            button.dataset.class
+          );
+        }
       );
 
+    $('searchInput')
+      ?.addEventListener(
+        'input',
+        e => {
+          state.search =
+            e.target.value || '';
 
-    $('examHistory').addEventListener(
-      'click',
-      event => {
-
-        const open =
-          event.target.closest(
-            '[data-open-exam]'
-          );
-
-        if (open) {
-          state.selectedExamId =
-            open.dataset.openExam;
-
-          renderAll();
-
-          return;
+          renderTable();
         }
+      );
 
+    $('addStudentBtn')
+      ?.addEventListener(
+        'click',
+        () =>
+          openStudentModal()
+      );
 
-        const edit =
-          event.target.closest(
-            '[data-edit-exam]'
-          );
+    $('bulkStudentBtn')
+      ?.addEventListener(
+        'click',
+        () =>
+          openBulkStudentModal()
+      );
 
-        if (edit) {
-          openEditExamModal(
-            edit.dataset.editExam
-          );
+    $('importBtn')
+      ?.addEventListener(
+        'click',
+        () =>
+          openImportModal()
+      );
 
-          return;
+    $('newExamBtn')
+      ?.addEventListener(
+        'click',
+        () =>
+          openNewExamModal()
+      );
+
+    $('toolsBtn')
+      ?.addEventListener(
+        'click',
+        () =>
+          openToolsModal()
+      );
+
+    $('printBtn')
+      ?.addEventListener(
+        'click',
+        () =>
+          openPrintOptionsModal()
+      );
+
+    $('exportBtn')
+      ?.addEventListener(
+        'click',
+        exportCSV
+      );
+
+    $('saveBtn')
+      ?.addEventListener(
+        'click',
+        saveCurrentExam
+      );
+
+    $('markAllAbsentBtn')
+      ?.addEventListener(
+        'click',
+        markAllPendingAbsent
+      );
+
+    $('restoreFile')
+      ?.addEventListener(
+        'change',
+        e => {
+          const file =
+            e.target.files?.[0];
+
+          if (file) {
+            restoreBackup(file);
+          }
+
+          e.target.value = '';
         }
+      );
 
-
-        const duplicate =
-          event.target.closest(
-            '[data-duplicate-exam]'
-          );
-
-        if (duplicate) {
-          duplicateExam(
-            duplicate.dataset
-              .duplicateExam
-          );
-
-          return;
+    $('modalRoot')
+      ?.addEventListener(
+        'click',
+        e => {
+          if (
+            e.target ===
+            $('modalRoot')
+          ) {
+            closeModal();
+          }
         }
-
-
-        const del =
-          event.target.closest(
-            '[data-delete-exam]'
-          );
-
-        if (del) {
-          deleteExam(
-            del.dataset.deleteExam
-          );
-        }
-      }
-    );
-
-
-    $('restoreFile').addEventListener(
-      'change',
-      event => {
-        restoreBackup(
-          event.target.files?.[0]
-        );
-      }
-    );
-
-
-    $('modalRoot').addEventListener(
-      'click',
-      event => {
-        if (
-          event.target ===
-          $('modalRoot')
-        ) {
-          closeModal();
-        }
-      }
-    );
-
+      );
 
     document.addEventListener(
       'keydown',
-      event => {
+      e => {
         if (
-          event.key === 'Escape' &&
+          e.key === 'Escape' &&
           !$('modalRoot').classList.contains(
             'hidden'
           )
@@ -3784,66 +4563,85 @@ const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
       }
     );
 
-  }
-    function init() {
-    bindEvents();
-
-    renderAll();
-
     window.addEventListener(
-      'beforeinstallprompt',
-      event => {
-        event.preventDefault();
-
-        state.deferredPrompt = event;
-
-        $('installBtn')
-          ?.classList.remove('hidden');
+      'beforeunload',
+      () => {
+        try {
+          persist();
+        } catch (_) {}
       }
     );
 
-    $('installBtn')
-      ?.addEventListener(
-        'click',
-        installApp
-      );
+    window.addEventListener(
+      'beforeinstallprompt',
+      e => {
+        e.preventDefault();
+
+        state.deferredInstallPrompt =
+          e;
+      }
+    );
 
     window.addEventListener(
       'appinstalled',
       () => {
-        state.deferredPrompt = null;
-
-        $('installBtn')
-          ?.classList.add('hidden');
+        state.deferredInstallPrompt =
+          null;
 
         toast(
           'App installed successfully.'
         );
       }
     );
+  }
 
-    if (
-      'serviceWorker' in navigator
-    ) {
-      window.addEventListener(
-        'load',
-        () => {
-          navigator.serviceWorker
-            .register('./sw.js')
-            .catch(error => {
-              console.warn(
-                'Service worker registration failed:',
-                error
-              );
-            });
-        }
+  function init() {
+    try {
+      loadDB();
+
+      normalizeState();
+
+      bindEvents();
+
+      renderAll();
+
+      registerServiceWorker();
+
+      updateClock();
+
+      setInterval(
+        updateClock,
+        1000
+      );
+
+      console.log(
+        'EZEE Result Manager initialized.'
+      );
+    } catch (err) {
+      console.error(
+        'Application initialization failed:',
+        err
+      );
+
+      toast(
+        'Application could not initialize.'
       );
     }
   }
 
-
-  init();
+  if (
+    document.readyState ===
+    'loading'
+  ) {
+    document.addEventListener(
+      'DOMContentLoaded',
+      init,
+      {
+        once: true
+      }
+    );
+  } else {
+    init();
+  }
 
 })();
-        
-  
