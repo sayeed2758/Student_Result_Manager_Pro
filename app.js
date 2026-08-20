@@ -2817,18 +2817,11 @@
             </tbody>
           </table>
 
-          <div class="signature-area">
-            <div class="signature">
-
-              <div class="signature-line">
-                ${escapeHTML(teacher)}
-              </div>
-
-              <small>
-                Teacher Signature
-              </small>
-
-            </div>
+          <div class="signature-box">
+  <strong>${escapeHTML(teacher||'Teacher')}</strong>
+  <div class="signature-line"></div>
+  <small>Teacher’s Signature</small>
+          </div>
           </div>
 
           <div class="footer">
