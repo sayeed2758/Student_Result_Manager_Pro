@@ -615,8 +615,8 @@
                     type="number"
                     min="0"
                     max="${exam ? exam.totalMarks : 100}"
-                    step="1"
-                    inputmode="numeric"
+                    step="any"
+                    inputmode="decimal"
                     value="${value}"
                     ${disabled ? 'disabled' : ''}
                     placeholder="${exam ? 'Marks' : '—'}"
@@ -1207,11 +1207,7 @@
     }
 
     const value = Number(raw);
-
-    const valid =
-      Number.isInteger(value) &&
-      value >= 0 &&
-      value <= e.totalMarks;
+const valid = Number.isFinite(value) && value >= 0 && value <= e.totalMarks;
 
     input.classList.toggle(
       'invalid',
