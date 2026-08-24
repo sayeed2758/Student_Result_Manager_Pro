@@ -21,7 +21,7 @@
     <div class="top-actions">
       <button class="top-btn desktop-tool" id="backupBtn" type="button">Backup</button>
       <button class="top-btn desktop-tool" id="restoreBtn" type="button">Restore</button>
-      <button class="top-btn desktop-tool hidden" id="installBtn" type="button">Install App</button><button class="top-btn desktop-tool" id="globalSearchBtn" type="button">Search</button>
+      <span id="liveClock" class="live-clock" aria-live="polite">--:--</span><button class="top-btn desktop-tool hidden" id="installBtn" type="button">Install App</button><button class="top-btn desktop-tool" id="globalSearchBtn" type="button">Search</button>
       <button class="menu-btn" id="toolsBtn" type="button" aria-label="Open tools">⋮</button>
     </div>
   </header>
@@ -57,6 +57,14 @@
     </section>
 
     <section id="analytics" class="stat-grid"></section>
+
+    <section class="panel premium-center" id="premiumCenterPanel">
+      <div class="panel-head small">
+        <div><span class="eyebrow">PREMIUM CONTROL CENTER</span><h2>Result Command Center</h2><p>Live overview, intelligent alerts and one-tap actions for the selected class.</p></div>
+        <div class="panel-head-actions premium-actions"><button id="quickNotesBtn" class="btn outline" type="button">Quick Notes</button><button id="smartInsightsBtn" class="btn secondary" type="button">Smart Insights</button></div>
+      </div>
+      <div id="premiumCenter"></div>
+    </section>
 
     <section class="panel students-panel">
       <div class="panel-head small"><div><span class="eyebrow">STUDENTS &amp; MARKS</span><h2>Marks Entry</h2></div><button id="addStudentBtn" class="btn primary" type="button">+ Add Student</button></div>
