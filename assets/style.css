@@ -213,3 +213,73 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   .fee-receipt-card{width:265mm!important;min-height:150mm!important;height:150mm!important;box-shadow:none!important}
   .fee-receipt-top,.fee-payment-band,.id-sample-footer,.id-sample-top-pattern{print-color-adjust:exact;-webkit-print-color-adjust:exact}
 }
+
+/* ===== QUALITY / RELIABILITY POLISH — no new features ===== */
+:root{--touch-min:44px}
+button,.btn,.top-btn,.menu-btn,.mini,.ops-card,.tool-card,.signature-option{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button:disabled,.btn:disabled{opacity:.58;cursor:not-allowed;transform:none!important}
+button:not(:disabled):active,.btn:not(:disabled):active,.mini:not(:disabled):active{transform:translateY(1px)}
+input,select,textarea{max-width:100%;box-sizing:border-box}
+.modal-card{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.modal-card .modal-actions{position:sticky;bottom:0;background:inherit;padding-top:10px;z-index:3}
+
+/* ID card: strictly one A4 page, centered and never allowed to create a second page. */
+@page idCardA4{size:A4 portrait;margin:0}
+.print-sheet.id-sample-sheet{page:idCardA4!important;width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;overflow:hidden!important;break-after:page;page-break-after:always;box-sizing:border-box}
+.id-sample-a4-page{width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;padding:7mm!important;box-sizing:border-box;display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important}
+.id-sample-paper-border{width:196mm!important;height:283mm!important;min-height:283mm!important;max-height:283mm!important;padding:9mm!important;box-sizing:border-box;display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important}
+.id-sample-card{width:130mm!important;height:205mm!important;min-height:205mm!important;max-height:205mm!important;box-sizing:border-box;flex:none!important;overflow:hidden!important}
+.id-sample-photo-wrap{flex:none}
+.id-sample-detail b{overflow-wrap:anywhere;word-break:break-word}
+.id-sample-address b{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+
+/* Attendance: scale the existing register so the complete class stays on one A4 sheet. */
+@page attendancePortrait{size:A4 portrait;margin:0}
+.print-sheet.attendance-a4{page:attendancePortrait!important;width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;overflow:hidden!important;box-sizing:border-box}
+.attendance-a4 .a4-soft-border{height:283mm!important;min-height:0!important;max-height:283mm!important;box-sizing:border-box;overflow:hidden}
+.attendance-register-grid{grid-template-columns:repeat(var(--att-cols),minmax(0,1fr))!important;min-width:0!important;gap:2.5mm!important}
+.attendance-register-table{width:100%!important;table-layout:fixed!important;border-collapse:collapse!important}
+.attendance-register-table th:nth-child(1),.attendance-register-table td:nth-child(1){width:12%!important}
+.attendance-register-table th:nth-child(3),.attendance-register-table td:nth-child(3){width:25%!important}
+.attendance-register-table th,.attendance-register-table td{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.attendance-ultra .attendance-register-table th,.attendance-ultra .attendance-register-table td{font-size:5.8px!important;padding:1.05px 1.5px!important;line-height:1.05!important}
+.attendance-compact .attendance-register-table th,.attendance-compact .attendance-register-table td{font-size:6.7px!important;padding:1.25px 1.8px!important;line-height:1.08!important}
+.attendance-normal .attendance-register-table th,.attendance-normal .attendance-register-table td{font-size:7.6px!important;padding:1.6px 2px!important;line-height:1.1!important}
+.attendance-print-header{flex:none!important}
+.attendance-title-row,.attendance-summary-bar{flex:none!important}
+.attendance-print-footer{flex:none!important}
+
+/* Fee receipt: preserve the sample's horizontal A4 character while making print geometry stable. */
+@page feeLandscape{size:A4 landscape;margin:0}
+.print-sheet.fee-sheet{page:feeLandscape!important;width:297mm!important;height:210mm!important;min-height:210mm!important;max-height:210mm!important;overflow:hidden!important;box-sizing:border-box}
+.fee-a4-page{width:297mm!important;height:210mm!important;min-height:210mm!important;max-height:210mm!important;padding:7mm!important;box-sizing:border-box;overflow:hidden!important}
+.fee-receipt-card{width:278mm!important;height:178mm!important;min-height:178mm!important;max-height:178mm!important;box-sizing:border-box;flex:none!important}
+
+/* Keep the existing result print table structurally untouched; only improve print stability. */
+@page resultA4{size:A4 portrait;margin:0}
+@media print{
+  .print-sheet:not(.id-sample-sheet):not(.attendance-a4):not(.fee-sheet){page:resultA4}
+  .print-table tr{break-inside:avoid;page-break-inside:avoid}
+  .print-table thead{display:table-header-group}
+  .print-border,.ops-print{break-inside:avoid;page-break-inside:avoid}
+  body{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  .id-sample-sheet,.attendance-a4,.fee-sheet{break-after:page;page-break-after:always}
+}
+
+/* Mobile polish without changing the existing feature set. */
+@media(max-width:650px){
+  .top-btn,.btn,.menu-btn,.mini{min-height:var(--touch-min)}
+  .modal-card{width:calc(100vw - 20px)!important;max-width:calc(100vw - 20px)!important;margin:10px!important;border-radius:20px!important}
+  .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .modal-actions .btn{width:100%;min-width:0}
+  .attendance-register-grid{gap:5px!important}
+  .fee-row-actions{width:100%}
+  .fee-row-actions .mini{min-height:40px}
+  .id-sample-card-preview{max-height:62vh;overflow:auto}
+}
+@media(max-width:380px){
+  .modal-card{padding:11px!important}
+  .modal-actions{grid-template-columns:1fr}
+  .attendance-pro-row{grid-template-columns:22px 1fr 88px!important}
+  .attendance-status-select{min-width:0!important}
+}
