@@ -61,3 +61,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   .mark-input{flex-basis:64px}
   .status-btn{font-size:8px}
 }
+
+/* Result-entry interaction polish */
+.status-btn{min-width:64px;touch-action:manipulation;user-select:none;-webkit-tap-highlight-color:transparent}
+@media(max-width:650px){.status-btn{min-width:64px;min-height:38px}.mark-row{align-items:flex-start}}
