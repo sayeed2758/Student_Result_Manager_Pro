@@ -2,11 +2,13 @@
 'use strict';
 
 const STORAGE_KEY='ezee_student_result_manager_v1';
-const BACKUP_VERSION=6;
+const BACKUP_VERSION=7;
+const NOTES_KEY='ezee_result_manager_notes_v1';
+const THEME_KEY='ezee_result_manager_theme_v1';
 const CLASSES=['4','5','6','7','8','9','10'];
 const TEACHERS=['Shahid Sir','Enam Sir','Zeeshan Sir','Abdur Rahman Sir','Takmil Sir'];
 const $=id=>document.getElementById(id);
-const state={db:null,selectedClass:'4',selectedExamId:null,search:'',historySearch:'',deferredPrompt:null,modalCleanup:null};
+const state={db:null,selectedClass:'4',selectedExamId:null,search:'',historySearch:'',deferredPrompt:null,modalCleanup:null,lastSavedAt:null};
 
 function uid(prefix='id'){return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,9)}`}
 function blankDB(){const classes={};CLASSES.forEach(c=>classes[c]={students:[],exams:[]});return{version:1,classes}}
@@ -44,7 +46,7 @@ function toast(message){const el=$('toast');if(!el)return;el.textContent=message
 function ensureExamStudents(exam){if(!exam)return;classData().students.forEach(s=>{if(!(s.id in exam.marks))exam.marks[s.id]='';if(!exam.statuses[s.id])exam.statuses[s.id]=(exam.marks[s.id]===''?'pending':'present')})}
 function stats(exam){if(!exam)return{total:classData().students.length,present:0,absent:0,pending:classData().students.length,highest:null,average:0};ensureExamStudents(exam);let present=0,absent=0,pending=0,vals=[];classData().students.forEach(s=>{const st=exam.statuses[s.id]||'pending';if(st==='absent')absent++;else if(st==='present'&&exam.marks[s.id]!==''){present++;const n=Number(exam.marks[s.id]);if(Number.isFinite(n))vals.push(n)}else pending++});return{total:classData().students.length,present,absent,pending,highest:vals.length?Math.max(...vals):null,average:vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0}}
 
-function renderAll(){renderClassGrid();renderExamSelect();renderExamInfo();renderAnalytics();renderTable();renderHistory();renderDashboardOverview()}
+function renderAll(){renderClassGrid();renderExamSelect();renderExamInfo();renderAnalytics();renderTable();renderHistory();renderDashboardOverview();renderPremiumCenter()}
 function renderClassGrid(){$('classGrid').innerHTML=CLASSES.map(c=>{const d=state.db.classes[c];return`<button class="class-card${c===state.selectedClass?' active':''}" type="button" data-class="${c}"><b>Class ${c}</b><span>${d.students.length} ${d.students.length===1?'Student':'Students'} · ${d.exams.length} ${d.exams.length===1?'Exam':'Exams'}</span></button>`}).join('');$('classSelect').value=state.selectedClass}
 function renderExamSelect(){const exams=classData().exams.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));if(!state.selectedExamId||!exams.some(e=>e.id===state.selectedExamId))state.selectedExamId=exams[0]?.id||null;$('examSelect').innerHTML='<option value="">No exam selected</option>'+exams.map(e=>`<option value="${escapeHTML(e.id)}">${escapeHTML(e.name)} — ${formatDate(e.date)}</option>`).join('');$('examSelect').value=state.selectedExamId||''}
 function renderExamInfo(){const e=currentExam();$('totalMarks').value=e?e.totalMarks:'';$('examDate').value=e?e.date:'';$('examCaption').textContent=e?`${e.name} · ${formatDate(e.date)} · Maximum ${e.totalMarks}`:'No exam selected';$('printBtn').disabled=!e;$('saveExamBtn').disabled=!e}
@@ -92,6 +94,58 @@ function statsForClass(cls,exam){
   return{total:d.students.length,present,absent,pending,highest:vals.length?Math.max(...vals):null,average:vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0};
 }
 
+
+function getNotesStore(){try{const raw=localStorage.getItem(NOTES_KEY);const obj=raw?JSON.parse(raw):{};return obj&&typeof obj==='object'?obj:{}}catch(_){return{}}}
+function noteKey(){return `${state.selectedClass}::${state.selectedExamId||'no-exam'}`}
+function currentNote(){const store=getNotesStore();return String(store[noteKey()]||'')}
+function saveCurrentNote(text){const store=getNotesStore();store[noteKey()]=String(text||'').slice(0,4000);try{localStorage.setItem(NOTES_KEY,JSON.stringify(store));return true}catch(_){return false}}
+function applySavedTheme(){const theme=localStorage.getItem(THEME_KEY);document.documentElement.dataset.theme=theme==='dark'?'dark':'light'}
+function toggleTheme(){const next=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=next;try{localStorage.setItem(THEME_KEY,next)}catch(_){};toast(next==='dark'?'Dark mode enabled.':'Light mode enabled.')}
+function renderLiveClock(){const el=$('liveClock');if(!el)return;const now=new Date();el.innerHTML=`<b>${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true})}</b><span>${now.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})}</span>`}
+function renderPremiumCenter(){
+  const root=$('premiumCenter');if(!root)return;
+  const d=classData(),e=currentExam(),s=stats(e);
+  const exams=d.exams.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const latest=exams[0],previous=exams[1];
+  const pct=e&&s.total?((s.present+s.absent)/s.total*100):0;
+  const avgPct=e&&s.present&&e.totalMarks?(s.average/e.totalMarks*100):0;
+  const previousPct=previous?(()=>{const ps=stats(previous);return ps.present&&previous.totalMarks?ps.average/previous.totalMarks*100:null})():null;
+  const delta=previousPct!=null?avgPct-previousPct:null;
+  const ranked=e?d.students.map(st=>{const status=e.statuses[st.id]||'pending';const n=Number(e.marks[st.id]);return{st,status,n,pct:Number.isFinite(n)&&e.totalMarks?n/e.totalMarks*100:null}}).filter(x=>x.status==='present'&&Number.isFinite(x.n)).sort((a,b)=>b.pct-a.pct):[];
+  const alerts=[];
+  if(!e)alerts.push('Create an exam to start result entry.');
+  else if(s.pending)alerts.push(`${s.pending} student${s.pending===1?'':'s'} still pending.`);
+  if(s.absent)alerts.push(`${s.absent} absent student${s.absent===1?'':'s'} recorded.`);
+  if(e&&s.total&&pct===100)alerts.push('This exam is fully completed. Ready for final review.');
+  const top=ranked.slice(0,3);
+  const trend=delta==null?'—':`${delta>=0?'+':''}${delta.toFixed(1)}%`;
+  root.innerHTML=`
+    <div class="premium-grid">
+      <div class="premium-card premium-hero"><div class="premium-card-top"><span>CLASS ${state.selectedClass}</span><span class="premium-live">LIVE</span></div><strong>${e?escapeHTML(e.name):'No exam selected'}</strong><p>${e?`${formatDate(e.date)} · Maximum ${e.totalMarks}`:'Choose or create an exam to unlock live controls.'}</p><div class="premium-progress"><span style="width:${Math.min(100,pct)}%"></span></div><div class="premium-progress-meta"><b>${Math.round(pct)}% complete</b><span>${e?s.present+s.absent:0}/${s.total||0} resolved</span></div></div>
+      <div class="premium-card"><span class="premium-label">AVERAGE</span><strong>${e&&s.present?avgPct.toFixed(1)+'%':'—'}</strong><p>${previousPct==null?'No previous exam comparison':`${trend} vs previous exam`}</p></div>
+      <div class="premium-card"><span class="premium-label">TOP SCORE</span><strong>${s.highest??'—'}</strong><p>${top[0]?escapeHTML(top[0].st.name):'No completed marks yet'}</p></div>
+      <div class="premium-card"><span class="premium-label">PENDING</span><strong class="${s.pending?'premium-warn':''}">${s.pending}</strong><p>${s.pending?'Needs attention':'All entries resolved'}</p></div>
+    </div>
+    <div class="premium-lower">
+      <div class="premium-box"><div class="premium-box-title"><strong>Performance Spotlight</strong><span>Top 3</span></div>${top.length?top.map((x,i)=>`<div class="spot-row"><span class="spot-rank">${i+1}</span><div class="spot-main"><b>${escapeHTML(x.st.name)}</b><small>${x.n} / ${e.totalMarks}</small></div><strong>${x.pct.toFixed(1)}%</strong></div>`).join(''):'<div class="premium-empty">Marks will appear here as students are evaluated.</div>'}</div>
+      <div class="premium-box"><div class="premium-box-title"><strong>Smart Alerts</strong><span>${alerts.length}</span></div>${alerts.map((a,i)=>`<div class="alert-row ${i===alerts.length-1&&pct===100?'alert-ok':''}"><span class="alert-dot"></span><span>${escapeHTML(a)}</span></div>`).join('')||'<div class="premium-empty">Everything looks good.</div>'}<div class="premium-quick-actions"><button class="btn primary" id="premiumNewExam" type="button">+ New Exam</button><button class="btn outline" id="premiumAddStudent" type="button">+ Student</button><button class="btn outline" id="premiumTheme" type="button">${document.documentElement.dataset.theme==='dark'?'☀ Light':'☾ Dark'}</button></div></div>
+    </div>`;
+  $('premiumNewExam').onclick=()=>openNewExamModal();$('premiumAddStudent').onclick=()=>openStudentModal();$('premiumTheme').onclick=()=>{toggleTheme();renderPremiumCenter()};
+}
+function openQuickNotesModal(){
+  const existing=currentNote();
+  openModal(`<div class="modal-head"><div><span class="eyebrow">QUICK NOTES</span><h3>Class ${state.selectedClass} Notes</h3><p class="muted">Private notes saved on this device for the selected exam.</p></div><button class="close-modal" type="button" data-modal-close>×</button></div><label class="field"><span>Notes</span><textarea id="quickNotesInput" class="notes-area" maxlength="4000" placeholder="Write reminders, weak topics, parent follow-ups, re-test notes...">${escapeHTML(existing)}</textarea></label><div class="modal-actions"><button class="btn outline" type="button" data-modal-close>Cancel</button><button class="btn primary" type="button" id="saveNotesBtn">Save Notes</button></div>`,card=>{card.querySelector('#saveNotesBtn').onclick=()=>{if(saveCurrentNote(card.querySelector('#quickNotesInput').value)){closeModal();toast('Notes saved.')}else toast('Could not save notes.')}})
+}
+function openSmartInsightsModal(){
+  const d=classData(),e=currentExam();if(!e){toast('Create or select an exam first.');return}
+  const s=stats(e),rows=[];
+  if(s.pending)rows.push(`Finish ${s.pending} pending student${s.pending===1?'':'s'} to complete the exam.`);
+  if(s.absent)rows.push(`${s.absent} student${s.absent===1?' is':'s are'} marked absent and will remain excluded from average.`);
+  if(s.present&&e.totalMarks){const avg=s.average/e.totalMarks*100;rows.push(`Class average is ${avg.toFixed(1)}%.`);if(avg>=80)rows.push('Overall performance is strong — consider highlighting the top performers.');else if(avg<50)rows.push('Average is below 50% — a revision or remedial follow-up may help.')}
+  const exams=d.exams.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));if(exams[1]){const ps=stats(exams[1]);if(ps.present&&exams[1].totalMarks&&s.present){const now=s.average/e.totalMarks*100,old=ps.average/exams[1].totalMarks*100;const diff=now-old;rows.push(`Average changed ${diff>=0?'+':''}${diff.toFixed(1)} percentage points versus ${exams[1].name}.`)}}
+  const rank=d.students.map(st=>{const n=Number(e.marks[st.id]);return{st,n,pct:Number.isFinite(n)&&e.totalMarks?n/e.totalMarks*100:null,status:e.statuses[st.id]||'pending'}}).filter(x=>x.status==='present'&&x.pct!=null).sort((a,b)=>b.pct-a.pct).slice(0,5);
+  openModal(`<div class="modal-head"><div><span class="eyebrow">SMART INSIGHTS</span><h3>Class ${state.selectedClass}</h3><p class="muted">${escapeHTML(e.name)} · ${formatDate(e.date)}</p></div><button class="close-modal" type="button" data-modal-close>×</button></div><div class="insight-score"><strong>${s.present&&e.totalMarks?(s.average/e.totalMarks*100).toFixed(1):'—'}%</strong><span>Current class average</span></div><div class="smart-list">${rows.map((r,i)=>`<div class="smart-item"><span>${i+1}</span><p>${escapeHTML(r)}</p></div>`).join('')||'<div class="premium-empty">No insights yet.</div>'}</div><div class="premium-box"><div class="premium-box-title"><strong>Top performers</strong><span>${rank.length}</span></div>${rank.map((x,i)=>`<div class="spot-row"><span class="spot-rank">${i+1}</span><div class="spot-main"><b>${escapeHTML(x.st.name)}</b><small>${x.n} / ${e.totalMarks}</small></div><strong>${x.pct.toFixed(1)}%</strong></div>`).join('')||'<div class="premium-empty">No completed marks yet.</div>'}</div><div class="modal-actions"><button class="btn outline" type="button" data-modal-close>Close</button></div>`)
+}
 function selectClass(c){if(!CLASSES.includes(String(c)))return;state.selectedClass=String(c);state.selectedExamId=classData().exams[0]?.id||null;state.search='';state.historySearch='';$('searchInput').value='';$('historySearch').value='';renderAll()}
 function createExam(name,totalMarks,date,cls){const clean=String(name||'').trim(),total=Number(totalMarks),target=state.db.classes[String(cls)];if(!clean){toast('Enter an exam name.');return false}if(!Number.isInteger(total)||total<1){toast('Total Marks must be a positive whole number.');return false}if(!CLASSES.includes(String(cls))||!target){toast('Invalid class.');return false}if(target.exams.some(e=>e.name.toLowerCase()===clean.toLowerCase()&&e.date===date)){toast('An exam with this name and date already exists.');return false}const exam={id:uid('exam'),name:clean,totalMarks:total,date:date||todayISO(),teacherSignature:'',marks:{},statuses:{}};target.students.forEach(s=>{exam.marks[s.id]='';exam.statuses[s.id]='pending'});target.exams.push(exam);state.selectedClass=String(cls);state.selectedExamId=exam.id;state.search='';$('searchInput').value='';persist();renderAll();toast('New exam created successfully.');return true}
 function saveCurrentExam(){const e=currentExam();if(!e){toast('Create or select an exam first.');return}const total=Number($('totalMarks').value),date=$('examDate').value;if(!Number.isInteger(total)||total<1){toast('Enter valid Total Marks.');return}ensureExamStudents(e);for(const id of Object.keys(e.marks)){if(e.statuses[id]==='absent')continue;if(e.marks[id]!==''&&e.marks[id]!=null){const n=Number(e.marks[id]);if(!Number.isFinite(n)||n<0||n>total){toast(`Invalid marks found. Each mark must be between 0 and ${total}.`);return}}}e.totalMarks=total;e.date=date||e.date||todayISO();persist();renderAll();toast('Exam saved successfully.')}
@@ -243,15 +297,19 @@ function bindEvents(){
     const input=e.target.closest('[data-mark-id]');
     if(input && document.activeElement!==input) saveMark(input.dataset.markId,input.value,input);
   },true);
-  $('addStudentBtn').onclick=()=>openStudentModal();$('emptyAddBtn').onclick=()=>openStudentModal();$('newExamBtn').onclick=()=>openNewExamModal();$('rankingBtn').onclick=()=>openRankingModal();$('globalSearchBtn').onclick=()=>openGlobalSearchModal();$('saveExamBtn').onclick=()=>saveCurrentExam();$('markPendingAbsentBtn').onclick=()=>markAllPendingAbsent();$('printBtn').onclick=()=>openPrintOptionsModal();$('exportCsvBtn').onclick=()=>exportCSV();$('toolsBtn').onclick=()=>openToolsModal();$('classInsightsBtn').onclick=()=>openResultIntelligenceModal();$('backupBtn').onclick=()=>exportBackup();$('restoreBtn').onclick=()=>$('restoreFile').click();$('installBtn').onclick=()=>installApp();
+  $('addStudentBtn').onclick=()=>openStudentModal();$('emptyAddBtn').onclick=()=>openStudentModal();$('newExamBtn').onclick=()=>openNewExamModal();$('quickNotesBtn').onclick=()=>openQuickNotesModal();$('smartInsightsBtn').onclick=()=>openSmartInsightsModal();$('rankingBtn').onclick=()=>openRankingModal();$('globalSearchBtn').onclick=()=>openGlobalSearchModal();$('saveExamBtn').onclick=()=>saveCurrentExam();$('markPendingAbsentBtn').onclick=()=>markAllPendingAbsent();$('printBtn').onclick=()=>openPrintOptionsModal();$('exportCsvBtn').onclick=()=>exportCSV();$('toolsBtn').onclick=()=>openToolsModal();$('classInsightsBtn').onclick=()=>openResultIntelligenceModal();$('backupBtn').onclick=()=>exportBackup();$('restoreBtn').onclick=()=>$('restoreFile').click();$('installBtn').onclick=()=>installApp();
   $('dashboardOverview').addEventListener('click',e=>{const b=e.target.closest('[data-dashboard-class]');if(b)selectClass(b.dataset.dashboardClass)});
   $('examHistory').addEventListener('click',e=>{if(e.target.closest('#historyNewExam'))return openNewExamModal();const open=e.target.closest('[data-open-exam]');if(open){state.selectedExamId=open.dataset.openExam;renderAll();return}const edit=e.target.closest('[data-edit-exam]');if(edit){openEditExamModal(edit.dataset.editExam);return}const dup=e.target.closest('[data-duplicate-exam]');if(dup){duplicateExam(dup.dataset.duplicateExam);return}const del=e.target.closest('[data-delete-exam]');if(del)deleteExam(del.dataset.deleteExam)});
   $('restoreFile').addEventListener('change',e=>restoreBackup(e.target.files?.[0]));$('modalRoot').addEventListener('click',e=>{if(e.target===e.currentTarget||e.target.matches('[data-close-modal]'))closeModal()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('modalRoot').classList.contains('hidden'))closeModal()});
+  document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openQuickNotesModal()}else if(e.key==='/'&&!/input|textarea|select/i.test(document.activeElement?.tagName||'')){e.preventDefault();$('searchInput')?.focus()}});
 }
 function init(){
+  applySavedTheme();
   state.db=loadDB();
   bindEvents();
   renderAll();
+  renderLiveClock();
+  setInterval(renderLiveClock,1000);
   window.addEventListener('beforeinstallprompt',e=>{
     e.preventDefault();
     state.deferredPrompt=e;
