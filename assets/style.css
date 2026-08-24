@@ -244,3 +244,70 @@ img{image-rendering:auto}
   .top-actions .desktop-tool{display:none}
   .modal-actions{grid-template-columns:1fr!important}
 }
+
+/* ===== 100-LEVEL PRODUCTION POLISH ===== */
+.print-absent{color:#c62828!important;background:#fff0f0!important;font-weight:950!important;text-transform:uppercase}
+
+/* Student ID: single A4 page, sample styling preserved */
+@media print{
+  @page idPortrait{size:A4 portrait;margin:6mm}
+  .print-sheet.id-sample-sheet{page:idPortrait!important;width:100%!important;height:285mm!important;min-height:285mm!important;max-height:285mm!important;overflow:hidden!important;page-break-after:avoid!important;break-after:avoid!important;display:flex!important;align-items:center!important;justify-content:center!important}
+  .id-sample-a4-page{width:100%!important;height:285mm!important;min-height:285mm!important;max-height:285mm!important;padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important}
+  .id-sample-paper-border{width:100%!important;height:285mm!important;min-height:285mm!important;max-height:285mm!important;padding:8mm!important;overflow:hidden!important;box-sizing:border-box!important}
+  .id-sample-card{width:132mm!important;height:204mm!important;min-height:204mm!important;max-height:204mm!important;overflow:hidden!important;box-shadow:none!important}
+  .id-sample-top-pattern,.id-sample-footer{print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important}
+
+  /* Fee receipt: A4 portrait, large and highly readable */
+  @page feePortrait{size:A4 portrait;margin:6mm}
+  .print-sheet.fee-landscape{page:feePortrait!important;width:100%!important;height:285mm!important;min-height:285mm!important;max-height:285mm!important;display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important;page-break-after:avoid!important;break-after:avoid!important}
+  .fee-a4-page{width:100%!important;height:285mm!important;min-height:285mm!important;max-height:285mm!important;padding:4mm!important;display:flex!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important}
+  .fee-receipt-card{width:181mm!important;height:267mm!important;min-height:267mm!important;max-height:267mm!important;border-radius:5mm!important;box-shadow:none!important;overflow:hidden!important}
+  .fee-receipt-top{grid-template-columns:1fr!important;gap:4mm!important;padding:10mm 10mm 7mm!important;text-align:center!important}
+  .fee-brand-row{justify-content:center!important;align-items:center!important}
+  .fee-brand-row img{width:22mm!important;height:22mm!important}
+  .fee-brand-big{font-size:24px!important;line-height:1.05!important}
+  .fee-brand-small{font-size:9px!important;padding:1.5mm 3mm!important}
+  .fee-address-line{font-size:9px!important;margin-top:3mm!important}
+  .fee-title-block{padding-top:2mm!important;text-align:center!important}
+  .fee-title{font-size:25px!important;letter-spacing:1.5px!important}
+  .fee-meta-row{grid-template-columns:1fr 1fr!important;gap:4mm!important;padding:7mm 10mm 5mm!important}
+  .fee-meta-row span{font-size:9px!important}
+  .fee-meta-row strong{font-size:14px!important}
+  .fee-main-grid{display:grid!important;grid-template-columns:1fr 36mm!important;gap:7mm!important;padding:0 10mm!important;align-items:start!important}
+  .fee-data-panel{grid-template-columns:1fr!important;gap:0!important}
+  .fee-field{grid-template-columns:38mm 1fr!important;min-height:17mm!important;padding:3mm 0!important;gap:4mm!important}
+  .fee-field span{font-size:10px!important}
+  .fee-field strong{font-size:13px!important;line-height:1.25!important}
+  .fee-photo-box{display:flex!important;width:34mm!important;height:42mm!important;border:1px solid #9ba9b2!important;border-radius:4mm!important;overflow:hidden!important;align-items:center!important;justify-content:center!important;position:relative!important;background:#f4f7f9!important}
+  .fee-photo-box img{width:100%!important;height:100%!important;object-fit:cover!important}
+  .fee-photo-placeholder{font-size:26px!important;font-weight:900!important;color:#243f59!important}
+  .fee-photo-box>span{position:absolute!important;left:0!important;right:0!important;bottom:0!important;background:rgba(36,63,89,.88)!important;color:#fff!important;font-size:6px!important;letter-spacing:1px!important;text-align:center!important;padding:1.5mm!important}
+  .fee-payment-band{grid-template-columns:1fr!important;gap:0!important;margin:7mm 10mm 0!important;padding:0!important;border:1px solid #9daab1!important;border-radius:3mm!important}
+  .fee-payment-band>div{padding:5mm 6mm!important;border-bottom:1px solid #c5cdd2!important}
+  .fee-payment-band>div:last-child{border-bottom:0!important}
+  .fee-payment-band span{font-size:10px!important}
+  .fee-payment-band strong{font-size:17px!important}
+  .fee-amount-box strong{font-size:24px!important}
+  .fee-mode-options{gap:8mm!important;margin-top:2mm!important}
+  .fee-mode-options span{font-size:11px!important}
+  .fee-bottom-row{grid-template-columns:1fr 52mm!important;gap:10mm!important;padding:10mm 10mm 5mm!important}
+  .fee-thankyou{font-size:10px!important}
+  .fee-authorized{width:52mm!important}
+  .fee-authorized b{font-size:11px!important}
+  .fee-authorized span{font-size:7px!important}
+  .fee-footer-strip{display:flex!important;justify-content:space-between!important;gap:5mm!important;padding:4mm 8mm!important;background:#243f59!important;color:#fff!important;font-size:7px!important}
+  .fee-receipt-top,.fee-payment-band,.fee-footer-strip{print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important}
+}
+
+/* Screen/mobile polish for existing features only */
+#modalCard .field input,#modalCard .field textarea,#modalCard .field select{min-height:44px}
+#modalCard .student-photo-editor{gap:14px}
+@media(max-width:700px){
+  .student-photo-editor{flex-direction:column;align-items:flex-start}
+  .student-photo-preview{margin:auto}
+  .id-card-preview{padding:0!important}
+  .id-sample-card-preview{max-width:100%!important}
+  .fee-list .fee-row-actions{flex-wrap:wrap}
+  .fee-row-actions .mini{min-height:42px}
+  .attendance-pro-row{grid-template-columns:30px 1fr 118px!important}
+}
