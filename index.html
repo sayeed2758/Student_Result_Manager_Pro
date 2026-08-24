@@ -21,7 +21,7 @@
     <div class="top-actions">
       <button class="top-btn desktop-tool" id="backupBtn" type="button">Backup</button>
       <button class="top-btn desktop-tool" id="restoreBtn" type="button">Restore</button>
-      <span id="liveClock" class="live-clock" aria-live="polite">--:--</span><button class="top-btn desktop-tool hidden" id="installBtn" type="button">Install App</button><button class="top-btn desktop-tool" id="globalSearchBtn" type="button">Search</button>
+      <button class="top-btn desktop-tool hidden" id="installBtn" type="button">Install App</button><button class="top-btn desktop-tool" id="globalSearchBtn" type="button">Search</button>
       <button class="menu-btn" id="toolsBtn" type="button" aria-label="Open tools">⋮</button>
     </div>
   </header>
@@ -58,18 +58,7 @@
 
     <section id="analytics" class="stat-grid"></section>
 
-    <section class="panel premium-center" id="premiumCenterPanel">
-      <div class="panel-head small">
-        <div><span class="eyebrow">PREMIUM CONTROL CENTER</span><h2>Result Command Center</h2><p>Live overview, intelligent alerts and one-tap actions for the selected class.</p></div>
-        <div class="panel-head-actions premium-actions"><button id="quickNotesBtn" class="btn outline" type="button">Quick Notes</button><button id="smartInsightsBtn" class="btn secondary" type="button">Smart Insights</button><button id="featureHubBtn" class="btn primary" type="button">Feature Hub 60+</button></div>
-      </div>
-      <div id="premiumCenter"></div>
-    </section>
-
-    <section class="panel operations-panel" id="operationsPanel">
-      <div class="panel-head small"><div><span class="eyebrow">COACHING OS</span><h2>Operations Center</h2><p>Attendance, fees, student ID cards and professional reports — all stored locally.</p></div><button id="operationsBtn" class="btn primary" type="button">Open Operations</button></div>
-      <div class="ops-strip"><button class="ops-strip-card" id="attendanceBtn" type="button"><b>Attendance Pro</b><span>Daily register + print</span></button><button class="ops-strip-card" id="feesBtn" type="button"><b>Fee Manager</b><span>Payments + receipts</span></button><button class="ops-strip-card" id="idCardBtn" type="button"><b>ID Card Studio</b><span>Photo identity cards</span></button><button class="ops-strip-card" id="reportsBtn" type="button"><b>Print Center</b><span>Professional reports</span></button></div>
-    </section>
+    <section class="panel operations-panel"><div class="panel-head small"><div><span class="eyebrow">COACHING OPERATIONS</span><h2>Essential Coaching Tools</h2><p>Only the three requested modules — Attendance, Fees and Student ID Cards.</p></div><button id="operationsBtn" class="btn primary" type="button">Open Operations</button></div><div class="ops-strip"><button class="ops-strip-card" id="attendanceBtn" type="button"><b>Attendance Pro</b><span>Daily attendance + print</span></button><button class="ops-strip-card" id="feesBtn" type="button"><b>Fee Manager</b><span>Payments + receipts</span></button><button class="ops-strip-card" id="idCardBtn" type="button"><b>Student ID Card Studio</b><span>Photo + professional ID card</span></button></div></section>
 
     <section class="panel students-panel">
       <div class="panel-head small"><div><span class="eyebrow">STUDENTS &amp; MARKS</span><h2>Marks Entry</h2></div><button id="addStudentBtn" class="btn primary" type="button">+ Add Student</button></div>
@@ -82,9 +71,7 @@
 
     <section class="panel history-panel"><div class="panel-head small"><div><span class="eyebrow">EXAM HISTORY</span><h2>Previous Exams</h2></div><label class="history-search"><span>⌕</span><input id="historySearch" type="search" placeholder="Search exams" autocomplete="off"></label></div><div id="examHistory" class="history-grid"></div></section>
   </main>
-  <footer class="footer">Made With ❤️ By Shahid Sir <span id="footerState" class="footer-state">Local data ready</span></footer>
-<div id="focusExitBtn" class="focus-exit hidden"><button type="button">Exit Focus Mode</button></div>
-<nav id="mobileActionBar" class="mobile-action-bar" aria-label="Quick actions"><button id="mobileHomeBtn" type="button"><span>⌂</span><small>Home</small></button><button id="mobileSearchBtn" type="button"><span>⌕</span><small>Search</small></button><button id="mobileAddBtn" type="button"><span>＋</span><small>Student</small></button><button id="mobileFeesBtn" type="button"><span>₹</span><small>Fees</small></button><button id="mobileFeaturesBtn" type="button"><span>☰</span><small>More</small></button></nav>
+  <footer class="footer">Made With ❤️ By Shahid Sir</footer>
 </div>
 
 <div id="modalRoot" class="modal-root hidden" aria-hidden="true"><div class="modal-backdrop" data-close-modal></div><div id="modalCard" class="modal-card" role="dialog" aria-modal="true"></div></div>
