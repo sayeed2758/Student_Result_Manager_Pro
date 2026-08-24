@@ -237,33 +237,37 @@ function printFeeReceipt(payment,teacher){
 }
 function openFeeSummarySignature(payments){openModal(`<div class="modal-head"><div><span class="eyebrow">FEE SUMMARY PRINT</span><h3>Choose Teacher Signature</h3></div><button class="close-modal" type="button" data-modal-close>×</button></div><div class="signature-options">${signatureOptionsHTML('feeSummaryTeacherSignature')}</div><div class="modal-actions"><button class="btn outline" type="button" data-modal-close>Cancel</button><button class="btn dark" id="printFeeSummary" type="button">Print Summary</button></div>`,card=>card.querySelector('#printFeeSummary').onclick=()=>{const teacher=card.querySelector('input[name="feeSummaryTeacherSignature"]:checked')?.value||TEACHERS[0];printFeeSummary(payments,teacher)})}
 function printFeeSummary(payments,teacher){const rows=payments.map((p,i)=>`<tr><td>${i+1}</td><td>${escapeHTML(p.studentName)}</td><td>${formatDate(p.date)} · ${escapeHTML(p.months)}</td><td>₹ ${Number(p.amount||0).toFixed(2)}</td></tr>`).join('');const total=payments.reduce((n,p)=>n+Number(p.amount||0),0);$('printArea').innerHTML=`<div class="print-sheet"><div class="print-border ops-print"><div class="print-header"><img src="assets/image.svg.png" alt="EZEE VISION CHAMPUA"><div><div class="print-title">EZEE VISION CHAMPUA</div><div class="print-subtitle">FEE COLLECTION SUMMARY</div></div></div><div class="print-heading">CLASS ${escapeHTML(state.selectedClass)}</div><table class="print-table"><thead><tr><th>Sl. No.</th><th>Name</th><th>Date / Month(s)</th><th>Amount</th></tr></thead><tbody>${rows||'<tr><td colspan="4">No payments</td></tr>'}</tbody></table><div class="fee-summary-total">Total Collected: <b>₹ ${total.toFixed(2)}</b></div><div class="print-signature-row"><div class="signature-box"><strong>${escapeHTML(teacher)}</strong><div class="signature-line"></div><small>Authorized Signature</small></div></div></div></div>`;closeModal();setTimeout(()=>window.print(),100)}
-function openIdCardGenerator(){const students=classData().students;if(!students.length){toast('Add a student first.');return}openModal(`<div class="modal-head"><div><span class="eyebrow">ID CARD STUDIO</span><h3>Professional Student ID Card</h3><p class="muted">Photo, student ID, parents name, mobile and address.</p></div><button class="close-modal" type="button" data-modal-close>×</button></div><label class="field"><span>Select Student</span><select id="idCardStudent">${students.map(st=>`<option value="${escapeHTML(st.id)}">${escapeHTML(st.name)}</option>`).join('')}</select></label><div id="idCardPreview" class="id-card-preview"></div><div class="modal-actions"><button class="btn outline" type="button" data-modal-close>Cancel</button><button class="btn dark" id="printIdCard" type="button">Print ID Card</button></div>`,card=>{const sel=card.querySelector('#idCardStudent'),preview=card.querySelector('#idCardPreview');const draw=()=>{const st=students.find(x=>x.id===sel.value)||students[0];preview.innerHTML=`<div class="id-mini-card"><div class="id-mini-head"><img src="assets/image.svg.png" alt=""><div><b>EZEE VISION</b><small>CBSE CLASSES</small></div></div><div class="id-mini-body">${st.photo?`<img class="id-mini-photo" src="${escapeHTML(st.photo)}" alt="">`:`<div class="id-mini-photo placeholder">${escapeHTML(st.name.charAt(0))}</div>`}<div class="id-mini-info"><strong>${escapeHTML(st.name)}</strong><span>Student ID · ${escapeHTML(st.id.slice(-8).toUpperCase())}</span><span>Class · ${escapeHTML(state.selectedClass)}</span><span>Parents · ${escapeHTML(st.parentName||'—')}</span><span>Mobile · ${escapeHTML(st.mobile||'—')}</span><span>Address · ${escapeHTML(st.address||'—')}</span></div></div></div>`};sel.onchange=draw;draw();card.querySelector('#printIdCard').onclick=()=>{const st=students.find(x=>x.id===sel.value);if(st)openIdCardSignature(st)}})}
+function openIdCardGenerator(){
+  const students=classData().students;
+  if(!students.length){toast('Add a student first.');return}
+  openModal(`<div class="modal-head"><div><span class="eyebrow">ID CARD STUDIO</span><h3>Professional Student ID Card</h3><p class="muted">Sample-style card: coaching logo, circular photo and student details.</p></div><button class="close-modal" type="button" data-modal-close>×</button></div><label class="field"><span>Select Student</span><select id="idCardStudent">${students.map(st=>`<option value="${escapeHTML(st.id)}">${escapeHTML(st.name)}</option>`).join('')}</select></label><div id="idCardPreview" class="id-card-preview"></div><div class="modal-actions"><button class="btn outline" type="button" data-modal-close>Cancel</button><button class="btn dark" id="printIdCard" type="button">Print ID Card</button></div>`,card=>{
+    const sel=card.querySelector('#idCardStudent'),preview=card.querySelector('#idCardPreview');
+    const draw=()=>{const st=students.find(x=>x.id===sel.value)||students[0];preview.innerHTML=`<div class="id-sample-card-preview"><div class="id-preview-logo"><img src="assets/image.svg.png" alt="EZEE VISION CHAMPUA"></div><div class="id-preview-photo">${st.photo?`<img src="${escapeHTML(st.photo)}" alt="Student Photo">`:`<div>${escapeHTML(st.name.charAt(0).toUpperCase())}</div>`}</div><div class="id-preview-name">${escapeHTML(st.name)}</div><div class="id-preview-class">CLASS — ${escapeHTML(state.selectedClass)}</div><div class="id-preview-details"><div><b>Student ID</b><span>${escapeHTML(String(st.id).slice(-8).toUpperCase())}</span></div><div><b>Parents Name</b><span>${escapeHTML(st.parentName||'—')}</span></div><div><b>Mobile Number</b><span>${escapeHTML(st.mobile||'—')}</span></div><div><b>Address</b><span>${escapeHTML(st.address||'—')}</span></div></div><div class="id-preview-footer">EZEE VISION CHAMPUA · CBSE CLASSES</div></div>`};
+    sel.onchange=draw;draw();
+    card.querySelector('#printIdCard').onclick=()=>{const st=students.find(x=>x.id===sel.value);if(st)openIdCardSignature(st)};
+  })
+}
 function openIdCardSignature(st){openModal(`<div class="modal-head"><div><span class="eyebrow">ID CARD PRINT</span><h3>Choose Teacher Signature</h3><p class="muted">Select one of the four authorized teachers.</p></div><button class="close-modal" type="button" data-modal-close>×</button></div><div class="signature-options">${signatureOptionsHTML('idCardTeacherSignature')}</div><div class="modal-actions"><button class="btn outline" type="button" data-modal-close>Cancel</button><button class="btn dark" id="printIdCardFinal" type="button">Print ID Card</button></div>`,card=>card.querySelector('#printIdCardFinal').onclick=()=>{const teacher=card.querySelector('input[name="idCardTeacherSignature"]:checked')?.value||TEACHERS[0];printIdCard(st,teacher)})}
 function printIdCard(st,teacher){
   const sid=String(st.id).slice(-8).toUpperCase();
-  $('printArea').innerHTML=`<div class="print-sheet id-sheet id-landscape-safe">
-    <div class="id-a4-page">
-      <div class="id-a4-inner-border">
-        <div class="id-card-large">
-          <div class="id-top-banner">
-            <div class="id-brand-wrap"><img src="assets/image.svg.png" alt="EZEE VISION CHAMPUA"><div><div class="id-brand-name">EZEE VISION CHAMPUA</div><div class="id-brand-sub">CBSE CLASSES</div></div></div>
-            <div class="id-chip">STUDENT ID CARD</div>
+  $('printArea').innerHTML=`<div class="print-sheet id-sheet id-sample-sheet">
+    <div class="id-a4-page id-sample-a4-page">
+      <div class="id-sample-paper-border">
+        <div class="id-sample-card">
+          <div class="id-sample-top-pattern"></div>
+          <div class="id-sample-logo"><img src="assets/image.svg.png" alt="EZEE VISION CHAMPUA"></div>
+          <div class="id-sample-photo-wrap">${st.photo?`<img src="${escapeHTML(st.photo)}" alt="Student Photo">`:`<div class="id-sample-photo-fallback">${escapeHTML(st.name.charAt(0).toUpperCase())}</div>`}</div>
+          <div class="id-sample-name">${escapeHTML(st.name)}</div>
+          <div class="id-sample-class">CLASS — ${escapeHTML(state.selectedClass)}</div>
+          <div class="id-sample-divider"></div>
+          <div class="id-sample-details">
+            <div class="id-sample-detail"><span>Student ID</span><b>${escapeHTML(sid)}</b></div>
+            <div class="id-sample-detail"><span>Parents Name</span><b>${escapeHTML(st.parentName||'—')}</b></div>
+            <div class="id-sample-detail"><span>Mobile Number</span><b>${escapeHTML(st.mobile||'—')}</b></div>
+            <div class="id-sample-detail id-sample-address"><span>Address</span><b>${escapeHTML(st.address||'—')}</b></div>
           </div>
-          <div class="id-card-accent"></div>
-          <div class="id-card-content">
-            <div class="id-photo-panel">${st.photo?`<img src="${escapeHTML(st.photo)}" alt="Student Photo">`:`<div class="id-photo-fallback">${escapeHTML(st.name.charAt(0).toUpperCase())}</div>`}<div class="id-photo-label">STUDENT PHOTO</div></div>
-            <div class="id-detail-panel">
-              <div class="id-name">${escapeHTML(st.name)}</div>
-              <div class="id-subid">STUDENT ID · ${escapeHTML(sid)}</div>
-              <div class="id-detail-grid">
-                <div><span>Parents Name</span><b>${escapeHTML(st.parentName||'—')}</b></div>
-                <div><span>Mobile Number</span><b>${escapeHTML(st.mobile||'—')}</b></div>
-                <div class="id-address-field"><span>Address</span><b>${escapeHTML(st.address||'—')}</b></div>
-              </div>
-            </div>
-          </div>
-          <div class="id-card-bottomline"><div><span>AUTHORIZED BY</span><b>EZEE VISION CHAMPUA</b></div><div class="id-signature"><b>${escapeHTML(teacher)}</b><div></div><span>Authorized Signature</span></div></div>
-          <div class="id-card-footer-strip">Valid Student Identity Card · Please carry this card during coaching hours</div>
+          <div class="id-sample-sign"><b>${escapeHTML(teacher)}</b><div></div><span>Authorised Sign.</span></div>
+          <div class="id-sample-footer"><strong>EZEE VISION CHAMPUA</strong><span>CBSE CLASSES</span></div>
         </div>
       </div>
     </div>
