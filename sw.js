@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ezee-result-manager-v11';
+const CACHE_NAME = 'ezee-result-manager-v13-premium-print';
 const APP_SHELL = [
   './',
   './index.html',
