@@ -311,3 +311,34 @@ img{image-rendering:auto}
   .fee-row-actions .mini{min-height:42px}
   .attendance-pro-row{grid-template-columns:30px 1fr 118px!important}
 }
+
+/* MOBILE VERTICAL SCROLL FIX — preserves all existing features */
+html, body, #app {
+  min-height: 100%;
+  height: auto !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+body {
+  overscroll-behavior-y: auto !important;
+}
+#app {
+  width: 100%;
+  min-height: 100dvh;
+}
+.page {
+  min-height: max-content;
+  padding-bottom: max(22px, env(safe-area-inset-bottom));
+}
+@media (max-width: 700px) {
+  html, body, #app {
+    overflow-y: auto !important;
+    touch-action: pan-y;
+  }
+  .page {
+    min-height: max-content;
+    padding-bottom: max(28px, env(safe-area-inset-bottom));
+  }
+}
