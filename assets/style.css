@@ -342,3 +342,43 @@ body {
     padding-bottom: max(28px, env(safe-area-inset-bottom));
   }
 }
+
+/* ===== HOTFIX: mobile page scroll + photo fit + receipt print reliability ===== */
+html, body {
+  width: 100%;
+  min-height: 100%;
+  height: auto !important;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+  -webkit-overflow-scrolling: touch;
+}
+body {
+  position: static !important;
+  touch-action: pan-y !important;
+}
+#app {
+  width: 100%;
+  min-height: 100vh !important;
+  min-height: 100dvh !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+.page {
+  height: auto !important;
+  min-height: max-content !important;
+  overflow: visible !important;
+}
+/* Show the complete uploaded portrait inside the ID-card circle. */
+.id-sample-photo-wrap img,
+.id-preview-photo img {
+  object-fit: contain !important;
+  object-position: center center !important;
+  background: #fff !important;
+}
+@media print {
+  .id-sample-photo-wrap img {
+    object-fit: contain !important;
+    object-position: center center !important;
+    background: #fff !important;
+  }
+}
