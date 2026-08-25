@@ -368,22 +368,49 @@ body {
   min-height: max-content !important;
   overflow: visible !important;
 }
-/* ID Card photo — WhatsApp-DP style circular crop */
-.id-sample-photo-wrap,
-.id-preview-photo {
+/* Show the complete uploaded portrait inside the ID-card circle. */
+.id-sample-photo-wrap img,
+.id-preview-photo img {
+  object-fit: contain !important;
+  object-position: center center !important;
+  background: #fff !important;
+}
+@media print {
+  .id-sample-photo-wrap img {
+    object-fit: contain !important;
+    object-position: center center !important;
+    background: #fff !important;
+  }
+}
+
+
+/* =========================================================
+   FINAL ID CARD PHOTO FIX — CIRCULAR / WHATSAPP-DP STYLE
+   Applies to screen preview AND A4 print output.
+   Does not change any other feature/layout.
+   ========================================================= */
+.id-sample-photo-wrap {
   overflow: hidden !important;
   border-radius: 50% !important;
 }
 
 .id-sample-photo-wrap img,
-.id-preview-photo img {
+.id-sample-photo-wrap > img,
+.id-preview-photo img,
+.id-preview-photo > img {
+  display: block !important;
   width: 100% !important;
   height: 100% !important;
-  display: block !important;
-  object-fit: cover !important;
-  object-position: center center !important;
+  max-width: none !important;
+  max-height: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
   border-radius: 50% !important;
+  object-fit: cover !important;
+  object-position: 50% 50% !important;
   background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 @media print {
@@ -392,12 +419,20 @@ body {
     border-radius: 50% !important;
   }
 
-  .id-sample-photo-wrap img {
+  .id-sample-photo-wrap img,
+  .id-sample-photo-wrap > img {
+    display: block !important;
     width: 100% !important;
     height: 100% !important;
-    object-fit: cover !important;
-    object-position: center center !important;
+    max-width: none !important;
+    max-height: none !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
     border-radius: 50% !important;
+    object-fit: cover !important;
+    object-position: 50% 50% !important;
     background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
 }
